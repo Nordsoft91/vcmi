@@ -34,6 +34,8 @@
 #include "../lib/mapping/CCampaignHandler.h"
 #include "../lib/mapping/CMap.h"
 #include "../lib/mapping/CMapInfo.h"
+#include "../lib/mapping/CMapService.h"
+#include "../lib/mapping/CMapEditManager.h"
 #include "../lib/mapObjects/MiscObjects.h"
 #include "../lib/rmg/CMapGenOptions.h"
 #include "../lib/registerTypes/RegisterTypes.h"
@@ -556,6 +558,50 @@ ui8 CServerHandler::getLoadMode()
 		return ELoadMode::SINGLE;
 	}
 	return loadMode;
+}
+
+void CServerHandler::convertMap(std::string map, std::string save, std::string from, std::string to)
+{
+	logGlobal->info("Map converter for debug purposes only.");
+	//CMap cmap(
+	
+	CMapService mapService;
+	auto cmap = mapService.loadMap(ResourceID(map, EResType::MAP));
+	
+	logGlobal->info("Map was loaded");
+	
+	std::vector<int3> tilesToReplace;
+	for(int k = 0; k < 2; ++k)
+	{
+		if(k == 1 && !cmap->twoLevel)
+			break;
+		
+		for(int i = 0; i < cmap->width ; ++i)
+		{
+			for(int j = 0; j < cmap->height ; ++j)
+			{
+					if(cmap->getTile(int3(i, j, k)).terType == Terrain(from))
+						tilesToReplace.push_back(int3(i, j, k));
+			}
+		}
+	}
+	
+	logGlobal->info("Found %d tiles of terrain %s", tilesToReplace.size(), from);
+	
+	cmap->getEditManager()->getTerrainSelection().setSelection(tilesToReplace);
+	cmap->getEditManager()->drawTerrain(Terrain(to), &CRandomGenerator::getDefault());
+	
+	logGlobal->info("Tiles converted to terrain %s", to);
+		
+	auto path = VCMIDirs::get().userCachePath() / "RandomMaps";
+	const std::string fileName = boost::str(boost::format("%s.vmap") % to);
+	const auto fullPath = path / fileName;
+	
+	logGlobal->info("Saving to: %s", fullPath);
+	
+	mapService.saveMap(cmap, fullPath);
+	
+	logGlobal->info("Conversion finished");
 }
 
 void CServerHandler::debugStartTest(std::string filename, bool save)

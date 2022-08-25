@@ -200,7 +200,9 @@ int main(int argc, char * argv[])
 		("donotstartserver,d","do not attempt to start server and just connect to it instead server")
 		("serverport", po::value<si64>(), "override port specified in config file")
 		("saveprefix", po::value<std::string>(), "prefix for auto save files")
-		("savefrequency", po::value<si64>(), "limit auto save creation to each N days");
+		("savefrequency", po::value<si64>(), "limit auto save creation to each N days")
+		("terrainSource", po::value<std::string>(), "сonvert terrain from")
+		("terrainTarget", po::value<std::string>(), "сonvert terrain to");
 
 	if(argc > 1)
 	{
@@ -472,7 +474,13 @@ int main(int argc, char * argv[])
 	session["oneGoodAI"].Bool() = vm.count("oneGoodAI");
 	session["aiSolo"].Bool() = false;
 
-	if(vm.count("testmap"))
+	if(vm.count("terrainSource") && vm.count("terrainTarget"))
+	{
+		std::string tmap = vm["testmap"].as<std::string>(), tsave = vm["testsave"].as<std::string>(), source = vm["terrainSource"].as<std::string>(), target = vm["terrainTarget"].as<std::string>();
+		CSH->convertMap(tmap, tsave, source, target);
+		return 0;
+	}
+	else if(vm.count("testmap"))
 	{
 		session["testmap"].String() = vm["testmap"].as<std::string>();
 		session["onlyai"].Bool() = true;

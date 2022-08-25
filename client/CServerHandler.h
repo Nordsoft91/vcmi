@@ -143,6 +143,7 @@ public:
 	ui8 getLoadMode();
 
 	void debugStartTest(std::string filename, bool save = false);
+	void convertMap(std::string map, std::string save, std::string from, std::string to);
 };
 
 extern CServerHandler * CSH;
