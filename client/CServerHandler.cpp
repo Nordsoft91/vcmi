@@ -594,7 +594,7 @@ void CServerHandler::convertMap(std::string map, std::string save, std::string f
 	logGlobal->info("Tiles converted to terrain %s", to);
 		
 	auto path = VCMIDirs::get().userCachePath() / "RandomMaps";
-	const std::string fileName = boost::str(boost::format("%s.vmap") % to);
+	const std::string fileName = boost::str(boost::format("%s.vmap") % save);
 	const auto fullPath = path / fileName;
 	
 	logGlobal->info("Saving to: %s", fullPath);
