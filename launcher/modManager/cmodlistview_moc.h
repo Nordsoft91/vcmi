@@ -11,6 +11,7 @@
 
 #include "../StdInc.h"
 #include "../../lib/CConfigHandler.h"
+#include <QNetworkAccessManager>
 
 namespace Ui
 {
@@ -62,6 +63,11 @@ class CModListView : public QWidget
 
 	QString genChangelogText(CModEntry & mod);
 	QString genModInfoText(CModEntry & mod);
+	
+	//GitHub API
+	void sendRequest(const QUrl & url, JsonNode bypass);
+	
+	void parseGithubRepository(JsonNode json);
 
 public:
 	explicit CModListView(QWidget * parent = 0);
@@ -114,4 +120,7 @@ private slots:
 
 private:
 	Ui::CModListView * ui;
+	
+	QNetworkAccessManager networkManager;
+	std::map<std::string, QString> downloadLink;
 };

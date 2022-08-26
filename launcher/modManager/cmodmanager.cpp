@@ -27,16 +27,20 @@ static QString detectModArchive(QString path, QString modName)
 	for(auto file : files)
 	{
 		QString filename = QString::fromUtf8(file.c_str());
-		if(filename.toLower().startsWith(modName))
+		if(filename.endsWith("/mod.json"))
+		{
+			modDirName = filename.section('/', 0, 0);
+		}
+		/*if(filename.toLower().startsWith(modName))
 		{
 			// archive must contain mod.json file
 			if(filename.toLower() == modName + "/mod.json")
 				modDirName = filename.section('/', 0, 0);
-		}
-		else // all files must be in <modname> directory
-		{
-			return "";
-		}
+		}*/
+		//else // all files must be in <modname> directory
+		//{
+			//return "";
+		//}
 	}
 	return modDirName;
 }
@@ -67,6 +71,11 @@ void CModManager::resetRepositories()
 void CModManager::loadRepository(QString file)
 {
 	modList->addRepository(JsonUtils::JsonFromFile(file).toMap());
+}
+
+void CModManager::loadRepository(QVariantMap data)
+{
+	modList->addRepository(data);
 }
 
 void CModManager::loadMods()
@@ -258,21 +267,29 @@ bool CModManager::doInstallMod(QString modname, QString archivePath)
 		removeModDir(destDir + modDirName);
 		return addError(modname, "Failed to extract mod data");
 	}
+	
+	std::string deb1 = (destDir + modDirName).toStdString(), deb2 = modDirName.toStdString(), deb3 = modname.toStdString();
 
-	QVariantMap json = JsonUtils::JsonFromFile(destDir + modDirName + "/mod.json").toMap();
+	QDir extractedDir(destDir + modDirName);
+	auto rc = QFile::rename(destDir + modDirName, destDir + modname);
+	if (rc)
+		extractedDir.setPath(destDir + modname);
+	
+	//extractedDir.rename(modDirName, modname);
+	
+	QVariantMap json = JsonUtils::JsonFromFile(destDir + modname + "/mod.json").toMap();
 
 	localMods.insert(modname, json);
 	modList->setLocalModList(localMods);
 	modList->modChanged(modname);
-
+	
 	return true;
 }
 
 bool CModManager::doUninstallMod(QString modname)
 {
-	ResourceID resID(std::string("Mods/") + modname.toUtf8().data(), EResType::DIRECTORY);
-	// Get location of the mod, in case-insensitive way
-	QString modDir = pathToQString(*CResourceHandler::get()->getResourceName(resID));
+	QString destDir = CLauncherDirs::get().modsPath() + "/";
+	QString modDir = destDir + modname;
 
 	if(!QDir(modDir).exists())
 		return addError(modname, "Data with this mod was not found");
@@ -283,10 +300,16 @@ bool CModManager::doUninstallMod(QString modname)
 	if(!removeModDir(modDir))
 		return addError(modname, "Failed to delete mod data");
 
-	localMods.remove(modname);
+	QVector<QString> relatedMods;
+	relatedMods.append(modname);
+	for(int i = 0; i < relatedMods.size(); ++i)
+	{
+		relatedMods.append(modList->getChildren(relatedMods[i]));
+		modList->modChanged(relatedMods[i]);
+		localMods.remove(relatedMods[i]);
+	}
 	modList->setLocalModList(localMods);
-	modList->modChanged(modname);
-
+	
 	return true;
 }
 

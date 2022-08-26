@@ -23,6 +23,7 @@
 #include "../launcherdirs.h"
 
 #include "../../lib/CConfigHandler.h"
+#include "JsonUtils.h"
 
 void CModListView::setupModModel()
 {
@@ -103,7 +104,7 @@ CModListView::CModListView(QWidget * parent)
 void CModListView::loadRepositories()
 {
 	manager->resetRepositories();
-	for(auto entry : settings["launcher"]["repositoryURL"].Vector())
+	/*for(auto entry : settings["launcher"]["repositoryURL"].Vector())
 	{
 		QString str = QString::fromUtf8(entry.String().c_str());
 
@@ -112,6 +113,89 @@ void CModListView::loadRepositories()
 		auto hashedStr = QString::fromUtf8(hashed.toHex());
 
 		downloadFile(hashedStr + ".json", str, "repository index");
+	}*/
+	
+	sendRequest(QUrl("https://api.github.com/orgs/vcmi-mods/repos"), JsonNode{});
+}
+
+
+void CModListView::sendRequest(const QUrl & url, JsonNode bypass)
+{
+	//QString url = QString::fromStdString(settings["launcher"]["updateConfigUrl"].String());
+	
+	QNetworkReply *response = networkManager.get(QNetworkRequest(url));
+	
+	QObject::connect(response, &QNetworkReply::finished, [&, response, bypass]{
+		response->deleteLater();
+		
+		if(response->error() != QNetworkReply::NoError)
+		{
+			return;
+		}
+		
+		auto byteArray = response->readAll();
+		JsonNode node(byteArray.constData(), byteArray.size());
+		if(bypass.getType() == JsonNode::JsonType::DATA_STRUCT)
+			JsonUtils::mergeCopy(node, bypass);
+		parseGithubRepository(node);
+	});
+}
+
+void CModListView::parseGithubRepository(JsonNode json)
+{
+	if(json.isNull())
+		return;
+	
+	if(json.getType() == JsonNode::JsonType::DATA_VECTOR)
+	{
+		for(auto & repo : json.Vector())
+		{
+			parseGithubRepository(repo);
+		}
+	}
+	else if(json.getType() == JsonNode::JsonType::DATA_STRUCT)
+	{
+		if(json["id"].Integer()) //list of repos
+		{
+			std::string defaultBranch = json["default_branch"].String();
+			std::string url = json["url"].String();
+			std::string name = json["name"].String();
+			std::string fullName = json["full_name"].String();
+			
+			auto download = QString{"https://github.com/%1/archive/refs/heads/%2.zip"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));
+		
+			auto modFilename = QString{"https://raw.githubusercontent.com/%1/%2/mod.json"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));
+			
+			//auto modFilename = QString{"https://api.github.com/repos/%1/contents/"}.arg(QString::fromStdString(fullName));
+		
+			JsonNode info;
+			info["download"].String() = download.toStdString();
+			sendRequest(modFilename, info);
+			//https://api.github.com/repos/vcmi-mods/vcmi-mod-korean-truetype-fonts/contents/
+		}
+		else
+		{
+			QString name = QString::fromStdString(json["name"].String()).toLower();
+			JsonNode p;
+			p[name.toStdString()] = json;
+			
+			manager->loadRepository(JsonUtils::toVariant(p).toMap());
+			//json["download"].String() =
+			//std::string name = json["name"].String();
+			//if(name == "mod.json")
+			//{
+				//QString downloadUrl = QString::fromStdString(json["download_url"].String());
+				//downloadFile(QString::fromStdString(name + ".json"), downloadUrl, "repository index");
+				//repositories.push_back(copyField(data, "version", "latestVersion"));
+				
+				//manager->modList
+				
+				//manager->loadRepository(filename);
+				//modList->addRepository(JsonUtils::JsonFromFile(file).toMap());
+				
+				//https://github.com/vcmi-mods/vcmi-mod-korean-truetype-fonts/archive/refs/heads/master.zip
+			//}
+		}
 	}
 }
 

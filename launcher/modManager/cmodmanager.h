@@ -34,6 +34,7 @@ public:
 
 	void resetRepositories();
 	void loadRepository(QString filename);
+	void loadRepository(QVariantMap data);
 	void loadModSettings();
 	void loadMods();
 
