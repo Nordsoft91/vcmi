@@ -300,15 +300,9 @@ bool CModManager::doUninstallMod(QString modname)
 	if(!removeModDir(modDir))
 		return addError(modname, "Failed to delete mod data");
 
-	QVector<QString> relatedMods;
-	relatedMods.append(modname);
-	for(int i = 0; i < relatedMods.size(); ++i)
-	{
-		relatedMods.append(modList->getChildren(relatedMods[i]));
-		modList->modChanged(relatedMods[i]);
-		localMods.remove(relatedMods[i]);
-	}
+	localMods.remove(modname);
 	modList->setLocalModList(localMods);
+	modList->modChanged(modname);
 	
 	return true;
 }
