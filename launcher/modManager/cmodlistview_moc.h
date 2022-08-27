@@ -66,8 +66,8 @@ class CModListView : public QWidget
 	
 	//GitHub API
 	void sendRequest(const QUrl & url, JsonNode bypass);
-	
-	void parseGithubRepository(JsonNode json);
+
+	JsonNode parseGithubRepository(JsonNode json, JsonNode meta);
 
 public:
 	explicit CModListView(QWidget * parent = 0);

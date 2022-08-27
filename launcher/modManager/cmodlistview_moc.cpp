@@ -115,7 +115,9 @@ void CModListView::loadRepositories()
 		downloadFile(hashedStr + ".json", str, "repository index");
 	}*/
 	
-	sendRequest(QUrl("https://api.github.com/orgs/vcmi-mods/repos"), JsonNode{});
+	JsonNode info;
+	info["request_id"].String() = "repos";
+	sendRequest(QUrl("https://api.github.com/orgs/vcmi-mods/repos"), info);
 }
 
 
@@ -135,68 +137,114 @@ void CModListView::sendRequest(const QUrl & url, JsonNode bypass)
 		
 		auto byteArray = response->readAll();
 		JsonNode node(byteArray.constData(), byteArray.size());
-		if(bypass.getType() == JsonNode::JsonType::DATA_STRUCT)
-			JsonUtils::mergeCopy(node, bypass);
-		parseGithubRepository(node);
+		parseGithubRepository(node, bypass);
 	});
 }
 
-void CModListView::parseGithubRepository(JsonNode json)
+JsonNode CModListView::parseGithubRepository(JsonNode json, JsonNode meta)
 {
+	JsonNode result;
+	
 	if(json.isNull())
-		return;
+	{
+		result["error"].String() = "respose is null";
+		return result;
+	}
 	
 	if(json.getType() == JsonNode::JsonType::DATA_VECTOR)
 	{
-		for(auto & repo : json.Vector())
+		for(auto repo : json.Vector())
 		{
-			parseGithubRepository(repo);
+			auto res = parseGithubRepository(repo, meta);
+			if(!res["error"].isNull())
+			{
+				result["error"] = res["error"];
+				return result;
+			}
+			
+			//no need to continue, we found the mod
+			if(res["type"].String() == "mod")
+				return result;
+			
+			//collecting folder names
+			//there should be only one folder with mod
+			if(res["type"].String() == "dir")
+				result["folder"] = res["folder"];
 		}
+		
+		//after we parse everything we need to go layer deeper
+		if(meta["request_id"].String() == "contents" && !result["folder"].isNull())
+		{
+			sendRequest(QString::fromStdString(result["folder"].String()), meta);
+		}
+		
 	}
 	else if(json.getType() == JsonNode::JsonType::DATA_STRUCT)
 	{
-		if(json["id"].Integer()) //list of repos
+		if(meta["request_id"].String() == "repos")
 		{
 			std::string defaultBranch = json["default_branch"].String();
 			std::string url = json["url"].String();
 			std::string name = json["name"].String();
 			std::string fullName = json["full_name"].String();
+			QString archiveUrl = QString::fromStdString(json["archive_url"].String());
+			archiveUrl.replace("{archive_format}{/ref}", "zipball");
 			
-			auto download = QString{"https://github.com/%1/archive/refs/heads/%2.zip"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));
+			if(defaultBranch.empty() || url.empty() || name.empty() || fullName.empty())
+				return JsonNode{};
+			
+			auto contents = QString{"https://api.github.com/repos/%1/contents"}.arg(QString::fromStdString(fullName));
+			
+			/*auto download = QString{"https://github.com/%1/archive/refs/heads/%2.zip"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));
 		
-			auto modFilename = QString{"https://raw.githubusercontent.com/%1/%2/mod.json"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));
+			auto modFilename = QString{"https://raw.githubusercontent.com/%1/%2/mod.json"}.arg(QString::fromStdString(fullName), QString::fromStdString(defaultBranch));*/
+			
+			//https://api.github.com/repos/vcmi-mods/vcmi-mod-korean-truetype-fonts/contents/
 			
 			//auto modFilename = QString{"https://api.github.com/repos/%1/contents/"}.arg(QString::fromStdString(fullName));
 		
-			JsonNode info;
-			info["download"].String() = download.toStdString();
-			sendRequest(modFilename, info);
+			//JsonNode info;
+			//info["download"].String() = download.toStdString();
+			
+			meta["request_id"].String() = "contents";
+			meta["default_branch"].String() = defaultBranch;
+			meta["archive_url"].String() = archiveUrl.toStdString();
+			sendRequest(contents, meta);
+			return result;
 			//https://api.github.com/repos/vcmi-mods/vcmi-mod-korean-truetype-fonts/contents/
 		}
-		else
+		if(meta["request_id"].String() == "contents")
+		{
+			//search for mod.json
+			if(json["name"].String() == "mod.json")
+			{
+				meta["request_id"].String() = "mod";
+				meta["download"] = meta["archive_url"];
+				sendRequest(QString::fromStdString(json["download_url"].String()), meta);
+				result["type"].String() = "mod";
+				return result;
+			}
+			if(json["type"].String() == "dir")
+			{
+				result["type"].String() = "dir";
+				result["folder"] = json["url"];
+				return result;
+			}
+		}
+		if(meta["request_id"].String() == "mod")
 		{
 			QString name = QString::fromStdString(json["name"].String()).toLower();
+			json["download"] = meta["download"];
+			
 			JsonNode p;
 			p[name.toStdString()] = json;
-			
 			manager->loadRepository(JsonUtils::toVariant(p).toMap());
-			//json["download"].String() =
-			//std::string name = json["name"].String();
-			//if(name == "mod.json")
-			//{
-				//QString downloadUrl = QString::fromStdString(json["download_url"].String());
-				//downloadFile(QString::fromStdString(name + ".json"), downloadUrl, "repository index");
-				//repositories.push_back(copyField(data, "version", "latestVersion"));
-				
-				//manager->modList
-				
-				//manager->loadRepository(filename);
-				//modList->addRepository(JsonUtils::JsonFromFile(file).toMap());
-				
-				//https://github.com/vcmi-mods/vcmi-mod-korean-truetype-fonts/archive/refs/heads/master.zip
-			//}
+			return result;
 		}
 	}
+	
+	result["error"].String() = "end of function";
+	return result;
 }
 
 CModListView::~CModListView()

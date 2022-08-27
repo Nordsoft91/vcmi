@@ -129,6 +129,8 @@ QVariant CModEntry::getValue(QString value) const
 			return localData[value];
 	}
 
+	auto mm = localData.toStdMap();
+	
 	if(repository.contains(value))
 		return repository[value];
 
