@@ -235,7 +235,9 @@ bool ObjectManager::createRequiredObjects()
 {
 	logGlobal->trace("Creating required objects");
 	
-	RandomGeneratorUtil::randomShuffle(requiredObjects, generator.rand);	
+	if(!requiredObjects.empty())
+		RandomGeneratorUtil::randomShuffle(requiredObjects, generator.rand);
+	
 	for(const auto & object : requiredObjects)
 	{
 		auto * obj = object.first;
