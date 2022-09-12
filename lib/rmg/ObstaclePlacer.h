@@ -13,6 +13,8 @@
 
 class CMap;
 class CMapEditManager;
+class RiverPlacer;
+class ObjectManager;
 class DLL_LINKAGE ObstacleProxy
 {
 public:
@@ -27,11 +29,13 @@ public:
 
 	virtual std::pair<bool, bool> verifyCoverage(const int3 & t) const;
 
-	virtual void placeObject(CMapEditManager * manager, rmg::Object & object);
+	virtual void placeObject(rmg::Object & object, std::set<CGObjectInstance*> & instances);
 
 	virtual void postProcess(const rmg::Object & object);
 
 	virtual bool isProhibited(const rmg::Area & objArea) const;
+	
+	virtual void finalInsertion(CMapEditManager * manager, std::set<CGObjectInstance*> & instances);
 
 protected:
 	int getWeightedObjects(const int3 & tile, const CMap * map, CRandomGenerator & rand, std::list<rmg::Object> & allObjects, std::vector<std::pair<rmg::Object*, int3>> & weightedObjects);
@@ -42,11 +46,26 @@ protected:
 	std::vector<ObstaclePair> possibleObstacles;
 };
 
-class ObstaclePlacer: public Modificator
+class ObstaclePlacer: public Modificator, public ObstacleProxy
 {
 public:
 	MODIFICATOR(ObstaclePlacer);
 	
 	void process() override;
 	void init() override;
+	
+	std::pair<bool, bool> verifyCoverage(const int3 & t) const override;
+	
+	void placeObject(rmg::Object & object, std::set<CGObjectInstance*> & instances) override;
+	
+	void postProcess(const rmg::Object & object) override;
+	
+	bool isProhibited(const rmg::Area & objArea) const override;
+	
+	void finalInsertion(CMapEditManager * manager, std::set<CGObjectInstance*> & instances) override;
+	
+private:
+	rmg::Area prohibitedArea;
+	RiverPlacer * riverManager;
+	ObjectManager * manager;
 };
