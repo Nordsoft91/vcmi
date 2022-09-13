@@ -307,7 +307,7 @@ void MapHandler::drawObjects(QPainter & painter, int x, int y, int z)
 	for(auto & object : getObjects(x, y, z))
 	{
 		const CGObjectInstance * obj = object.obj;
-		if (!obj)
+		if(!obj)
 		{
 			logGlobal->error("Stray map object that isn't fading");
 			return;
@@ -319,7 +319,7 @@ void MapHandler::drawObjects(QPainter & painter, int x, int y, int z)
 		if(obj->ID == Obj::HERO && obj->tempOwner.isValidPlayer())
 			objData.flagBitmap = findFlagBitmap(dynamic_cast<const CGHeroInstance*>(obj), 0, obj->tempOwner, 4);
 		
-		if (objData.objBitmap)
+		if(objData.objBitmap)
 		{
 			auto pos = obj->getPosition();
 
@@ -327,8 +327,8 @@ void MapHandler::drawObjects(QPainter & painter, int x, int y, int z)
 			
 			if(objData.flagBitmap)
 			{
-				if (x == pos.x - 1 && y == pos.y - 1)
-					painter.drawImage(QPoint(x * tileSize, y * tileSize), *objData.flagBitmap);
+				if(x == pos.x && y == pos.y)
+					painter.drawImage(QPoint((x - 2) * tileSize, (y - 1) * tileSize), *objData.flagBitmap);
 			}
 		}
 	}
@@ -347,7 +347,7 @@ void MapHandler::drawObject(QPainter & painter, const TileObject & object)
 
 	auto objData = findObjectBitmap(obj, animationFrame, obj->ID == Obj::HERO ? 2 : 0);
 	if(obj->ID == Obj::HERO && obj->tempOwner.isValidPlayer())
-		objData.flagBitmap = findFlagBitmap(dynamic_cast<const CGHeroInstance*>(obj), 0, obj->tempOwner, 4);
+		objData.flagBitmap = findFlagBitmap(dynamic_cast<const CGHeroInstance*>(obj), 0, obj->tempOwner, 0);
 	
 	if (objData.objBitmap)
 	{
@@ -358,7 +358,7 @@ void MapHandler::drawObject(QPainter & painter, const TileObject & object)
 		if (objData.flagBitmap)
 		{
 			if(object.rect.x() == pos.x && object.rect.y() == pos.y)
-				painter.drawImage(pos.x * tileSize, pos.y * tileSize, *objData.flagBitmap);
+				painter.drawImage(pos.x * tileSize - object.rect.x(), pos.y * tileSize - object.rect.y(), *objData.flagBitmap);
 		}
 	}
 }
@@ -377,16 +377,14 @@ void MapHandler::drawObjectAt(QPainter & painter, const CGObjectInstance * obj, 
 	auto objData = findObjectBitmap(obj, animationFrame, obj->ID == Obj::HERO ? 2 : 0);
 	std::vector<std::shared_ptr<QImage>> debugFlagImages;
 	if(obj->ID == Obj::HERO && obj->tempOwner.isValidPlayer())
-	{
 		objData.flagBitmap = findFlagBitmap(dynamic_cast<const CGHeroInstance*>(obj), 0, obj->tempOwner, 4);
-	}
 	
 	if (objData.objBitmap)
 	{
 		painter.drawImage(QPoint((x + 1) * 32 - objData.objBitmap->width(), (y + 1) * 32 - objData.objBitmap->height()), *objData.objBitmap);
 		
 		if (objData.flagBitmap)
-			painter.drawImage(QPoint((x - 1) * 32, (y - 1) * 32), *objData.flagBitmap);
+			painter.drawImage(QPoint((x + 1) * 32 - objData.objBitmap->width(), (y + 1) * 32 - objData.objBitmap->height()), *objData.flagBitmap);
 	}
 }
 
