@@ -9,6 +9,7 @@
 #include "../lib/rmg/ObstaclePlacer.h"
 #include "../lib/CSkillHandler.h"
 #include "../lib/spells/CSpellHandler.h"
+#include "../lib/CHeroHandler.h"
 #include "mapview.h"
 #include "scenelayer.h"
 #include "maphandler.h"
@@ -70,7 +71,9 @@ void MapController::repairMap()
 {
 	//fix owners for objects
 	for(auto obj : _map->objects)
+	{
 		if(obj->getOwner() == PlayerColor::UNFLAGGABLE)
+		{
 			if(dynamic_cast<CGMine*>(obj.get()) ||
 			   dynamic_cast<CGDwelling*>(obj.get()) ||
 			   dynamic_cast<CGTownInstance*>(obj.get()) ||
@@ -78,6 +81,38 @@ void MapController::repairMap()
 			   dynamic_cast<CGShipyard*>(obj.get()) ||
 			   dynamic_cast<CGHeroInstance*>(obj.get()))
 				obj->tempOwner = PlayerColor::NEUTRAL;
+		}
+		//fix hero instance
+		if(auto * nih = dynamic_cast<CGHeroInstance*>(obj.get()))
+		{
+			//fix spells
+			auto type = VLC->heroh->objects[nih->subID];
+			if(nih->spellbookContainsSpell(SpellID::PRESET))
+			{
+				nih->removeSpellFromSpellbook(SpellID::PRESET);
+			}
+			else
+			{
+				for(auto spellID : type->spells)
+					nih->addSpellToSpellbook(spellID);
+			}
+			//fix portrait
+			if(nih->portrait < 0 || nih->portrait == 255)
+				nih->portrait = type->imageIndex;
+		}
+		//fix town instance
+		if(auto * tnh = dynamic_cast<CGTownInstance*>(obj.get()))
+		{
+			if(tnh->getTown())
+			{
+				vstd::erase_if(tnh->builtBuildings, [tnh](BuildingID bid)
+				{
+					return !tnh->getTown()->buildings.count(bid);
+				});
+			}
+		}
+		
+	}
 	
 	//there might be extra skills, arts and spells not imported from map
 	if(VLC->skillh->getDefaultAllowed().size() > map()->allowedAbilities.size())

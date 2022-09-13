@@ -308,8 +308,9 @@ void MainWindow::saveMap()
 	catch(const std::exception & e)
 	{
 		QMessageBox::critical(this, "Failed to save map", e.what());
+		return;
 	}
-
+	
 	unsaved = false;
 	setTitle();
 }
@@ -483,7 +484,7 @@ void MainWindow::loadObjectsTree()
 	ui->terrainLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
 	//adding roads
 	for(auto & road : ROAD_NAMES)
-	{		
+	{
 		QPushButton *b = new QPushButton(QString::fromStdString(road));
 		ui->roadLayout->addWidget(b);
 		connect(b, &QPushButton::clicked, this, [this, road]{ roadOrRiverButtonClicked(road, true); });

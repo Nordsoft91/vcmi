@@ -104,29 +104,6 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 			if(mp.second == 0)
 				issues.emplace_back(QString("Player %1 doesn't have any starting town").arg(mp.first), false);
 
-		bool roadWarning = false;
-		bool riverWarning = false;
-		for(int k : {0, 1})
-		{
-			if(k && !map->twoLevel)
-				break;
-			for(int j = 0; j < map->height; ++j)
-			{
-				for(int i = 0; i < map->width; ++i)
-				{
-					if(map->getTile(int3(i, j, k)).roadType != ROAD_NAMES[0])
-						roadWarning = true;
-					if(map->getTile(int3(i, j, k)).riverType != RIVER_NAMES[0])
-						riverWarning = true;
-				}
-			}
-		}
-
-		if(roadWarning)
-			issues.emplace_back("Roads are presented on the map but not supported by Map Editor", false);
-		if(riverWarning)
-			issues.emplace_back("Rivers are presented on the map but not supported by Map Editor", false);
-
 		if(map->name.empty())
 			issues.emplace_back("Map name is not specified", false);
 		if(map->description.empty())
