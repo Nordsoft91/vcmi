@@ -12,7 +12,7 @@
 #include "rewardswidget.h"
 
 //===============IMPLEMENT OBJECT INITIALIZATION FUNCTIONS================
-Initializer::Initializer(CMap * m, CGObjectInstance * o, const PlayerColor & pl) : map(m), defaultPlayer(pl)
+Initializer::Initializer(CGObjectInstance * o, const PlayerColor & pl) : defaultPlayer(pl)
 {
 ///IMPORTANT! initialize order should be from base objects to derived objects
 	INIT_OBJ_TYPE(CGResource);

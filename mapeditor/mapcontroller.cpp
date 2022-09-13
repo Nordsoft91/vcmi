@@ -376,7 +376,7 @@ void MapController::commitObjectCreate(int level)
 		return;
 	}
 	
-	Initializer init(map(), newObj, defaultPlayer);
+	Initializer init(newObj, defaultPlayer);
 	
 	_map->getEditManager()->insertObject(newObj);
 	_mapHandler->invalidate(newObj);

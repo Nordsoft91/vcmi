@@ -38,7 +38,7 @@ public:
 	//DECLARE_OBJ_TYPE(CGPandoraBox);
 	
 	
-	Initializer(CMap *, CGObjectInstance *, const PlayerColor &);
+	Initializer(CGObjectInstance *, const PlayerColor &);
 
 private:
 	PlayerColor defaultPlayer;
