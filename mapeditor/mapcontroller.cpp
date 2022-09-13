@@ -109,6 +109,10 @@ void MapController::repairMap()
 				{
 					return !tnh->getTown()->buildings.count(bid);
 				});
+				vstd::erase_if(tnh->forbiddenBuildings, [tnh](BuildingID bid)
+				{
+					return !tnh->getTown()->buildings.count(bid);
+				});
 			}
 		}
 		
