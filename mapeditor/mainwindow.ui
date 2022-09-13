@@ -684,7 +684,7 @@
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="page3">
+       <widget class="QWidget" name="terrainPage">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -745,6 +745,23 @@
         <attribute name="label">
          <string>Roads</string>
         </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="roadLayout"/>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="riverPage">
         <property name="geometry">
@@ -764,6 +781,23 @@
         <attribute name="label">
          <string>Rivers</string>
         </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="riverLayout"/>
+         </item>
+        </layout>
        </widget>
       </widget>
      </item>

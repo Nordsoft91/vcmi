@@ -169,6 +169,30 @@ void MapController::commitTerrainChange(int level, const Terrain & terrain)
 	main->mapChanged();
 }
 
+void MapController::commitRoadOrRiverChange(int level, const std::string & type, bool isRoad)
+{
+	std::vector<int3> v(_scenes[level]->selectionTerrainView.selection().begin(),
+						_scenes[level]->selectionTerrainView.selection().end());
+	if(v.empty())
+		return;
+	
+	_scenes[level]->selectionTerrainView.clear();
+	_scenes[level]->selectionTerrainView.draw();
+	
+	_map->getEditManager()->getTerrainSelection().setSelection(v);
+	if(isRoad)
+		_map->getEditManager()->drawRoad(type, &CRandomGenerator::getDefault());
+	else
+		_map->getEditManager()->drawRiver(type, &CRandomGenerator::getDefault());
+	
+	for(auto & t : v)
+		_scenes[level]->terrainView.setDirty(t);
+	_scenes[level]->terrainView.draw();
+	
+	_miniscenes[level]->updateViews();
+	main->mapChanged();
+}
+
 void MapController::commitObjectErase(int level)
 {
 	auto selectedObjects = _scenes[level]->selectionObjectsView.getSelection();

@@ -362,6 +362,11 @@ void MainWindow::terrainButtonClicked(Terrain terrain)
 	controller.commitTerrainChange(mapLevel, terrain);
 }
 
+void MainWindow::roadOrRiverButtonClicked(std::string type, bool isRoad)
+{
+	controller.commitRoadOrRiverChange(mapLevel, type, isRoad);
+}
+
 void MainWindow::addGroupIntoCatalog(const std::string & groupName, bool staticOnly)
 {
 	auto knownObjects = VLC->objtypeh->knownObjects();
@@ -474,9 +479,26 @@ void MainWindow::loadObjectsTree()
 		//filter
 		ui->terrainFilterCombo->addItem(QString::fromStdString(terrain));
 	}
-
 	//add spacer to keep terrain button on the top
 	ui->terrainLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	//adding roads
+	for(auto & road : ROAD_NAMES)
+	{		
+		QPushButton *b = new QPushButton(QString::fromStdString(road));
+		ui->roadLayout->addWidget(b);
+		connect(b, &QPushButton::clicked, this, [this, road]{ roadOrRiverButtonClicked(road, true); });
+	}
+	//add spacer to keep terrain button on the top
+	ui->roadLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	//adding rivers
+	for(auto & river : RIVER_NAMES)
+	{
+		QPushButton *b = new QPushButton(QString::fromStdString(river));
+		ui->riverLayout->addWidget(b);
+		connect(b, &QPushButton::clicked, this, [this, river]{ roadOrRiverButtonClicked(river, false); });
+	}
+	//add spacer to keep terrain button on the top
+	ui->riverLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	if(objectBrowser)
 		throw std::runtime_error("object browser exists");
@@ -554,6 +576,7 @@ void MainWindow::loadObjectsTree()
 	addGroupIntoCatalog("HERO", true, false, Obj::PRISON);
 	addGroupIntoCatalog("HERO", false, false, Obj::HERO);
 	addGroupIntoCatalog("HERO", false, false, Obj::RANDOM_HERO);
+	addGroupIntoCatalog("HERO", false, false, Obj::HERO_PLACEHOLDER);
 	addGroupIntoCatalog("ARTIFACTS", true, false, Obj::ARTIFACT);
 	addGroupIntoCatalog("ARTIFACTS", false, false, Obj::RANDOM_ART);
 	addGroupIntoCatalog("ARTIFACTS", false, false, Obj::RANDOM_TREASURE_ART);
@@ -630,13 +653,7 @@ void MainWindow::loadObjectsTree()
 
 
 	/*
-		HERO = 34,
-		LEAN_TO = 39,
 		WOG_OBJECT = 63,//subtype > 0
-		RANDOM_HERO = 70,
-		FREELANCERS_GUILD = 213,
-		HERO_PLACEHOLDER = 214,
-		TRADING_POST_SNOW = 221,
 */
 	}
 	catch(const std::exception & e)

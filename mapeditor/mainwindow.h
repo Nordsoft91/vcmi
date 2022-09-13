@@ -70,6 +70,7 @@ private slots:
 	void on_toolArea_clicked(bool checked);
 
 	void terrainButtonClicked(Terrain terrain);
+	void roadOrRiverButtonClicked(std::string type, bool isRoad);
 
 	void on_toolErase_clicked();
 
