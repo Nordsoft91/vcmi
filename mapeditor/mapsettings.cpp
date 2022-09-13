@@ -3,7 +3,7 @@
 #include "mainwindow.h"
 
 #include "../lib/CSkillHandler.h"
-#include "../lib/Spells/CSpellHandler.h"
+#include "../lib/spells/CSpellHandler.h"
 #include "../lib/CArtHandler.h"
 
 MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :

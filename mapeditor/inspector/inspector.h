@@ -41,7 +41,6 @@ public:
 	Initializer(CMap *, CGObjectInstance *, const PlayerColor &);
 
 private:
-	CMap * map;
 	PlayerColor defaultPlayer;
 };
 

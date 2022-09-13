@@ -37,7 +37,7 @@ public:
 	MinimapViewLayer viewport;
 	
 protected:
-	virtual std::list<AbstractLayer *> getAbstractLayers();
+	std::list<AbstractLayer *> getAbstractLayers() override;
 };
 
 class MapScene : public MapSceneBase
