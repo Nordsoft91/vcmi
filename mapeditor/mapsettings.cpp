@@ -2,6 +2,10 @@
 #include "ui_mapsettings.h"
 #include "mainwindow.h"
 
+#include "../lib/CSkillHandler.h"
+#include "../lib/Spells/CSpellHandler.h"
+#include "../lib/CArtHandler.h"
+
 MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :
 	QDialog(parent),
 	ui(new Ui::MapSettings),
@@ -13,8 +17,34 @@ MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :
 
 	ui->mapNameEdit->setText(tr(controller.map()->name.c_str()));
 	ui->mapDescriptionEdit->setPlainText(tr(controller.map()->description.c_str()));
-
+	
 	show();
+	
+	
+	for(int i = 0; i < controller.map()->allowedAbilities.size(); ++i)
+	{
+		auto * item = new QListWidgetItem(QString::fromStdString(VLC->skillh->objects[i]->getName()));
+		item->setData(Qt::UserRole, QVariant::fromValue(i));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(controller.map()->allowedAbilities[i] ? Qt::Checked : Qt::Unchecked);
+		ui->listAbilities->addItem(item);
+	}
+	for(int i = 0; i < controller.map()->allowedSpell.size(); ++i)
+	{
+		auto * item = new QListWidgetItem(QString::fromStdString(VLC->spellh->objects[i]->getName()));
+		item->setData(Qt::UserRole, QVariant::fromValue(i));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(controller.map()->allowedSpell[i] ? Qt::Checked : Qt::Unchecked);
+		ui->listSpells->addItem(item);
+	}
+	for(int i = 0; i < controller.map()->allowedArtifact.size(); ++i)
+	{
+		auto * item = new QListWidgetItem(QString::fromStdString(VLC->arth->objects[i]->getName()));
+		item->setData(Qt::UserRole, QVariant::fromValue(i));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(controller.map()->allowedArtifact[i] ? Qt::Checked : Qt::Unchecked);
+		ui->listArts->addItem(item);
+	}
 
 	//ui8 difficulty;
 	//ui8 levelLimit;
@@ -37,5 +67,22 @@ void MapSettings::on_pushButton_clicked()
 	controller.map()->name = ui->mapNameEdit->text().toStdString();
 	controller.map()->description = ui->mapDescriptionEdit->toPlainText().toStdString();
 	controller.commitChangeWithoutRedraw();
+	
+	for(int i = 0; i < controller.map()->allowedAbilities.size(); ++i)
+	{
+		auto * item = ui->listAbilities->item(i);
+		controller.map()->allowedAbilities[i] = item->checkState() == Qt::Checked;
+	}
+	for(int i = 0; i < controller.map()->allowedSpell.size(); ++i)
+	{
+		auto * item = ui->listSpells->item(i);
+		controller.map()->allowedSpell[i] = item->checkState() == Qt::Checked;
+	}
+	for(int i = 0; i < controller.map()->allowedArtifact.size(); ++i)
+	{
+		auto * item = ui->listArts->item(i);
+		controller.map()->allowedArtifact[i] = item->checkState() == Qt::Checked;
+	}
+	
 	close();
 }
