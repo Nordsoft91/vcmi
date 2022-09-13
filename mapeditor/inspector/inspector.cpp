@@ -296,8 +296,12 @@ void Inspector::updateProperties()
 	addProperty("InstanceName", obj->instanceName);
 	addProperty("TypeName", obj->typeName);
 	addProperty("SubTypeName", obj->subTypeName);
-	auto factory = VLC->objtypeh->getHandlerFor(obj->ID, obj->subID);
-	addProperty("IsStatic", factory->isStaticObject());
+	
+	if(!dynamic_cast<CGHeroInstance*>(obj))
+	{
+		auto factory = VLC->objtypeh->getHandlerFor(obj->ID, obj->subID);
+		addProperty("IsStatic", factory->isStaticObject());
+	}
 	
 	auto * delegate = new InspectorDelegate();
 	delegate->options << "NEUTRAL";
