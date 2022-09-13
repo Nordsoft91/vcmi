@@ -59,6 +59,7 @@ class ImageLoader
 	QImage * image;
 	ui8 * lineStart;
 	ui8 * position;
+	QPoint spriteSize, margins, fullSize;
 public:
 	//load size raw pixels from data
 	inline void Load(size_t size, const ui8 * data);
@@ -66,7 +67,7 @@ public:
 	inline void Load(size_t size, ui8 color=0);
 	inline void EndLine();
 	//init image with these sizes and palette
-	inline void init(QPoint SpriteSize, QPoint Margins, QPoint FullSize, QRgb * pal);
+	inline void init(QPoint SpriteSize, QPoint Margins, QPoint FullSize);
 
 	ImageLoader(QImage * Img);
 	~ImageLoader();
@@ -297,14 +298,14 @@ std::shared_ptr<QImage> DefFile::loadFrame(size_t frame, size_t group) const
 	const ui32 BaseOffset = currentOffset;
 
 	
-	std::shared_ptr<QImage> img = std::make_shared<QImage>(sprite.width, sprite.height, QImage::Format_Indexed8);
+	std::shared_ptr<QImage> img = std::make_shared<QImage>(sprite.fullWidth, sprite.fullHeight, QImage::Format_Indexed8);
 	if(!img)
 		throw std::runtime_error("Image memory cannot be allocated");
 	
 	ImageLoader loader(img.get());
-	//loader.init(QPoint(sprite.width, sprite.height),
-		//		QPoint(sprite.leftMargin, sprite.topMargin),
-			//	QPoint(sprite.fullWidth, sprite.fullHeight), palette.get());
+	loader.init(QPoint(sprite.width, sprite.height),
+				QPoint(sprite.leftMargin, sprite.topMargin),
+				QPoint(sprite.fullWidth, sprite.fullHeight));
 
 	switch(sprite.format)
 	{
@@ -442,22 +443,17 @@ ImageLoader::ImageLoader(QImage * Img):
 	
 }
 
-void ImageLoader::init(QPoint SpriteSize, QPoint Margins, QPoint FullSize, QRgb * pal)
+void ImageLoader::init(QPoint SpriteSize, QPoint Margins, QPoint FullSize)
 {
-	//Init image
+	spriteSize = SpriteSize;
+	margins = Margins;
+	fullSize = FullSize;
 	
-	//image->surf = SDL_CreateRGBSurface(0, SpriteSize.x, SpriteSize.y, 8, 0, 0, 0, 0);
-	//image->margins  = Margins;
-	//image->fullSize = FullSize;
-
-	//Prepare surface
-	//SDL_Palette * p = SDL_AllocPalette(SDLImage::DEFAULT_PALETTE_COLORS);
-	//SDL_SetPaletteColors(p, pal, 0, SDLImage::DEFAULT_PALETTE_COLORS);
-	//SDL_SetSurfacePalette(image->surf, p);
-	//SDL_FreePalette(p);
-
-	//SDL_LockSurface(image->surf);
-	lineStart = position = image->bits();
+	memset((void *)image->bits(), 0, fullSize.y() * fullSize.x());
+	
+	lineStart = image->bits();
+	lineStart += margins.y() * fullSize.x() + margins.x();
+	position = lineStart;
 }
 
 inline void ImageLoader::Load(size_t size, const ui8 * data)
@@ -480,8 +476,8 @@ inline void ImageLoader::Load(size_t size, ui8 color)
 
 inline void ImageLoader::EndLine()
 {
-	//lineStart += 0;//image->surf->pitch;
-	//position = lineStart;
+	lineStart += fullSize.x();
+	position = lineStart;
 }
 
 ImageLoader::~ImageLoader()

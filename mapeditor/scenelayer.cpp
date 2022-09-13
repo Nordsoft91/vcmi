@@ -217,7 +217,7 @@ void TerrainLayer::draw(bool onlyDirty)
 		return;
 	
 	QPainter painter(pixmap.get());
-	painter.setCompositionMode(QPainter::CompositionMode_Source);
+	//painter.setCompositionMode(QPainter::CompositionMode_Source);
 	
 	if(onlyDirty)
 	{
@@ -241,10 +241,9 @@ void TerrainLayer::draw(bool onlyDirty)
 		}
 		for(auto & t : forRedrawing)
 		{
-			//TODO: fix water and roads
 			handler->drawTerrainTile(painter, t.x, t.y, scene->level);
-			//main->getMapHandler()->drawRiver(painter, t.x, t.y, scene->level);
-			//main->getMapHandler()->drawRoad(painter, t.x, t.y, scene->level);
+			handler->drawRiver(painter, t.x, t.y, scene->level);
+			handler->drawRoad(painter, t.x, t.y, scene->level);
 		}
 	}
 	else
@@ -253,10 +252,9 @@ void TerrainLayer::draw(bool onlyDirty)
 		{
 			for(int i = 0; i < map->width; ++i)
 			{
-				//TODO: fix water and roads
 				handler->drawTerrainTile(painter, i, j, scene->level);
-				//main->getMapHandler()->drawRiver(painter, i, j, scene->level);
-				//main->getMapHandler()->drawRoad(painter, i, j, scene->level);
+				handler->drawRiver(painter, i, j, scene->level);
+				handler->drawRoad(painter, i, j, scene->level);
 			}
 		}
 	}
@@ -289,7 +287,6 @@ void ObjectsLayer::draw(bool onlyDirty)
 	
 	pixmap->fill(QColor(0, 0, 0, 0));
 	QPainter painter(pixmap.get());
-	//painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 	std::set<const CGObjectInstance *> drawen;
 	
 	

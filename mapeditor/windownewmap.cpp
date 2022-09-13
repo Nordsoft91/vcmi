@@ -236,10 +236,6 @@ void WindowNewMap::on_okButtong_clicked()
 		}
 		
 		CMapGenerator generator(mapGenOptions);
-		//TODO: fix water and roads
-		generator.disableModificator("RoadPlacer");
-		generator.disableModificator("RiverPlacer");
-
 		auto progressBarWnd = new GeneratorProgress(generator, this);
 		progressBarWnd->show();
 	

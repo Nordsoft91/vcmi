@@ -108,14 +108,25 @@ void MapHandler::drawRoad(QPainter & painter, int x, int y, int z)
 	auto & tinfo = map->getTile(int3(x, y, z));
 	auto * tinfoUpper = map->isInTheMap(int3(x, y - 1, z)) ? &map->getTile(int3(x, y - 1, z)) : nullptr;
 
+	if (tinfoUpper && tinfoUpper->roadType != ROAD_NAMES[0])
+	{
+		QRect source(0, tileSize / 2, tileSize, tileSize / 2);
+		ui8 rotation = (tinfoUpper->extTileFlags >> 4) % 4;
+		bool hflip = (rotation == 1 || rotation == 3), vflip = (rotation == 2 || rotation == 3);
+		if(roadImages.at(tinfoUpper->roadType).size() > tinfoUpper->roadDir)
+		{
+			painter.drawImage(QPoint(x * tileSize, y * tileSize), roadImages.at(tinfoUpper->roadType)[tinfoUpper->roadDir]->mirrored(hflip, vflip), source);
+		}
+	}
+	
 	if(tinfo.roadType != ROAD_NAMES[0]) //print road from this tile
 	{
+		QRect source(0, 0, tileSize, tileSize / 2);
 		ui8 rotation = (tinfo.extTileFlags >> 4) % 4;
-
 		bool hflip = (rotation == 1 || rotation == 3), vflip = (rotation == 2 || rotation == 3);
 		if(roadImages.at(tinfo.roadType).size() > tinfo.roadDir)
 		{
-			painter.drawImage(x * tileSize, y * tileSize, roadImages.at(tinfo.roadType)[tinfo.roadDir]->mirrored(hflip, vflip));
+			painter.drawImage(QPoint(x * tileSize, y * tileSize + tileSize / 2), roadImages.at(tinfo.roadType)[tinfo.roadDir]->mirrored(hflip, vflip), source);
 		}
 	}
 }
