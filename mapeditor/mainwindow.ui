@@ -51,7 +51,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>17</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -88,7 +88,11 @@
     <addaction name="actionLevel"/>
     <addaction name="actionGrid"/>
     <addaction name="actionPass"/>
-    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuPlayer">
+    <property name="title">
+     <string>Player</string>
+    </property>
     <addaction name="actionNeutral"/>
     <addaction name="actionPlayer_1"/>
     <addaction name="actionPlayer_2"/>
@@ -103,6 +107,7 @@
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuMap"/>
+   <addaction name="menuPlayer"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -685,7 +690,7 @@
           <x>0</x>
           <y>0</y>
           <width>128</width>
-          <height>320</height>
+          <height>271</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -728,7 +733,7 @@
           <x>0</x>
           <y>0</y>
           <width>128</width>
-          <height>320</height>
+          <height>271</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -747,7 +752,7 @@
           <x>0</x>
           <y>0</y>
           <width>128</width>
-          <height>320</height>
+          <height>271</height>
          </rect>
         </property>
         <property name="sizePolicy">
