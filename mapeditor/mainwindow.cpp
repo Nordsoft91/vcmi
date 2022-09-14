@@ -662,7 +662,7 @@ void MainWindow::loadObjectsTree()
 	addGroupIntoCatalog("QUESTS", true, false, Obj::BORDERGUARD);
 	addGroupIntoCatalog("QUESTS", true, false, Obj::KEYMASTER);
 	addGroupIntoCatalog("OBSTACLES", true);
-	//addGroupIntoCatalog("OTHER", false);
+	addGroupIntoCatalog("OTHER", false);
 
 
 	/*
