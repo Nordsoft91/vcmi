@@ -188,9 +188,15 @@ void MapHandler::initObjectRects()
 		if(animation->size(0) == 0)
 			continue;
 		
-		auto image = animation->getImage(0, 0);
+		auto image = animation->getImage(0, obj->ID == Obj::HERO ? 2 : 0);
 		if(!image)
-			continue;
+		{
+			//workaound for prisons
+			image = animation->getImage(0, 0);
+			if(!image)
+				continue;
+		}
+			
 		
 		for(int fx=0; fx < obj->getWidth(); ++fx)
 		{
@@ -458,6 +464,9 @@ void MapHandler::invalidate(CGObjectInstance * obj)
 		return;
 		
 	auto image = animation->getImage(0, obj->ID == Obj::HERO ? 2 : 0);
+	if(!image)
+		return;
+	
 	for(int fx=0; fx < obj->getWidth(); ++fx)
 	{
 		for(int fy=0; fy < obj->getHeight(); ++fy)

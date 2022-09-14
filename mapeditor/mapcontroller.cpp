@@ -85,8 +85,11 @@ void MapController::repairMap()
 		//fix hero instance
 		if(auto * nih = dynamic_cast<CGHeroInstance*>(obj.get()))
 		{
-			//fix spells
 			auto type = VLC->heroh->objects[nih->subID];
+			
+			if(nih->ID == Obj::HERO)
+				nih->appearance = VLC->objtypeh->getHandlerFor(Obj::HERO, type->heroClass->getIndex())->getTemplates().front();
+			//fix spells
 			if(nih->spellbookContainsSpell(SpellID::PRESET))
 			{
 				nih->removeSpellFromSpellbook(SpellID::PRESET);
