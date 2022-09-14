@@ -100,7 +100,8 @@ protected:
 		{
 			itemKey = keyItems[key];
 			table->setItem(table->row(itemKey), 1, itemValue);
-			table->setItemDelegateForRow(table->row(itemKey), delegate);
+			if(delegate)
+				table->setItemDelegateForRow(table->row(itemKey), delegate);
 		}
 		else
 		{
