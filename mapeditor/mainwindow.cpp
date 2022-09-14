@@ -171,6 +171,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	onPlayersChanged();
 	
 	show();
+	
+	//Load map from command line
+	if(qApp->arguments().size() == 2)
+		openMap(qApp->arguments().at(1));
 }
 
 MainWindow::~MainWindow()
@@ -238,16 +242,8 @@ void MainWindow::initializeMap(bool isNew)
 	onPlayersChanged();
 }
 
-void MainWindow::on_actionOpen_triggered()
+bool MainWindow::openMap(const QString & filenameSelect)
 {
-	if(!getAnswerAboutUnsavedChanges())
-		return;
-	
-	auto filenameSelect = QFileDialog::getOpenFileName(this, tr("Open Image"), QString::fromStdString(VCMIDirs::get().userCachePath().make_preferred().string()), tr("Homm3 Files (*.vmap *.h3m)"));
-	
-	if(filenameSelect.isNull())
-		return;
-	
 	QFileInfo fi(filenameSelect);
 	std::string fname = fi.fileName().toStdString();
 	std::string fdir = fi.dir().path().toStdString();
@@ -260,7 +256,10 @@ void MainWindow::on_actionOpen_triggered()
 	CResourceHandler::addFilesystem("local", "mapEditor", mapEditorFilesystem);
 	
 	if(!CResourceHandler::get("mapEditor")->existsResource(resId))
+	{
 		QMessageBox::warning(this, "Failed to open map", "Cannot open map from this folder");
+		return false;
+	}
 	
 	CMapService mapService;
 	try
@@ -270,12 +269,25 @@ void MainWindow::on_actionOpen_triggered()
 	catch(const std::exception & e)
 	{
 		QMessageBox::critical(this, "Failed to open map", e.what());
-		return;
+		return false;
 	}
-
-
+	
 	filename = filenameSelect;
 	initializeMap(controller.map()->version != EMapFormat::VCMI);
+	return true;
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+	if(!getAnswerAboutUnsavedChanges())
+		return;
+	
+	auto filenameSelect = QFileDialog::getOpenFileName(this, tr("Open Image"), QString::fromStdString(VCMIDirs::get().userCachePath().make_preferred().string()), tr("Homm3 Files (*.vmap *.h3m)"));
+	
+	if(filenameSelect.isNull())
+		return;
+	
+	openMap(filenameSelect);
 }
 
 void MainWindow::saveMap()

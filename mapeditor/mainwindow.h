@@ -33,6 +33,7 @@ public:
 	void initializeMap(bool isNew);
 
 	void saveMap();
+	bool openMap(const QString &);
 	
 	MapView * mapView();
 
