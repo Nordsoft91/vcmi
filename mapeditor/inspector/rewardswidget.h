@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "../lib/mapObjects/CGPandoraBox.h"
+#include "../lib/mapping/CMap.h"
 
 namespace Ui {
 class RewardsWidget;
@@ -29,7 +30,7 @@ class RewardsWidget : public QDialog
 	Q_OBJECT
 
 public:
-	explicit RewardsWidget(CGPandoraBox &, QWidget *parent = nullptr);
+	explicit RewardsWidget(const CMap &, CGPandoraBox &, QWidget *parent = nullptr);
 	~RewardsWidget();
 	
 	void obtainData();
@@ -54,6 +55,7 @@ private:
 	
 	Ui::RewardsWidget *ui;
 	CGPandoraBox * pandora;
+	const CMap & map;
 	int rewards = 0;
 };
 
@@ -63,7 +65,7 @@ class RewardsPandoraDelegate : public QStyledItemDelegate
 public:
 	using QStyledItemDelegate::QStyledItemDelegate;
 	
-	RewardsPandoraDelegate(CGPandoraBox &);
+	RewardsPandoraDelegate(const CMap &, CGPandoraBox &);
 	
 	QWidget * createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 	void setEditorData(QWidget *editor, const QModelIndex &index) const override;
@@ -71,6 +73,7 @@ public:
 	
 private:
 	CGPandoraBox & pandora;
+	const CMap & map;
 };
 
 #endif // REWARDSWIDGET_H

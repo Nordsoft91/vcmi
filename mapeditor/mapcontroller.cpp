@@ -343,32 +343,59 @@ void MapController::commitChangeWithoutRedraw()
 	main->mapChanged();
 }
 
-void MapController::commitObjectShiftOrCreate(int level)
+void MapController::commitObjectShift(int level)
 {
 	auto shift = _scenes[level]->selectionObjectsView.shift;
-	if(shift.isNull())
-		return;
-	
-	for(auto * obj : _scenes[level]->selectionObjectsView.getSelection())
+	bool makeShift = !shift.isNull();
+	if(makeShift)
 	{
-		int3 pos = obj->pos;
-		pos.z = level;
-		pos.x += shift.x(); pos.y += shift.y();
-		
-		if(obj == _scenes[level]->selectionObjectsView.newObject)
+		for(auto * obj : _scenes[level]->selectionObjectsView.getSelection())
 		{
-			_scenes[level]->selectionObjectsView.newObject->pos = pos;
-			commitObjectCreate(level);
-		}
-		else
-		{
+			int3 pos = obj->pos;
+			pos.z = level;
+			pos.x += shift.x(); pos.y += shift.y();
+			
 			auto prevPositions = _mapHandler->getTilesUnderObject(obj);
 			_map->getEditManager()->moveObject(obj, pos);
 			_mapHandler->invalidate(prevPositions);
 			_mapHandler->invalidate(obj);
 		}
 	}
+	
+	_scenes[level]->selectionObjectsView.newObject = nullptr;
+	_scenes[level]->selectionObjectsView.shift = QPoint(0, 0);
+	_scenes[level]->selectionObjectsView.selectionMode = 0;
+	
+	if(makeShift)
+	{
+		_scenes[level]->objectsView.draw();
+		_scenes[level]->selectionObjectsView.draw();
+		_scenes[level]->passabilityView.update();
 		
+		_miniscenes[level]->updateViews();
+		main->mapChanged();
+	}
+}
+
+void MapController::commitObjectCreate(int level)
+{
+	auto * newObj = _scenes[level]->selectionObjectsView.newObject;
+	if(!newObj)
+		return;
+	
+	auto shift = _scenes[level]->selectionObjectsView.shift;
+	
+	int3 pos = newObj->pos;
+	pos.z = level;
+	pos.x += shift.x(); pos.y += shift.y();
+	
+	newObj->pos = pos;
+	
+	Initializer init(newObj, defaultPlayer);
+	
+	_map->getEditManager()->insertObject(newObj);
+	_mapHandler->invalidate(newObj);
+	
 	_scenes[level]->selectionObjectsView.newObject = nullptr;
 	_scenes[level]->selectionObjectsView.shift = QPoint(0, 0);
 	_scenes[level]->selectionObjectsView.selectionMode = 0;
@@ -380,12 +407,8 @@ void MapController::commitObjectShiftOrCreate(int level)
 	main->mapChanged();
 }
 
-void MapController::commitObjectCreate(int level)
+bool MapController::canPlaceObject(int level, CGObjectInstance * newObj, QString & error) const
 {
-	auto * newObj = _scenes[level]->selectionObjectsView.newObject;
-	if(!newObj)
-		return;
-	
 	//need this because of possible limits
 	auto rmgInfo = VLC->objtypeh->getHandlerFor(newObj->ID, newObj->subID)->getRMGInfo();
 	
@@ -404,25 +427,26 @@ void MapController::commitObjectCreate(int level)
 	{
 		auto typeName = QString::fromStdString(newObj->typeName);
 		auto subTypeName = QString::fromStdString(newObj->subTypeName);
-		main->setStatusMessage(QString("Reached map limit for object %1 - %2").arg(typeName, subTypeName));
-		return; //maplimit reached
+		error = QString("Reached map limit for object %1 - %2").arg(typeName, subTypeName);
+		return false; //maplimit reached
 	}
 	if(defaultPlayer == PlayerColor::NEUTRAL && (newObj->ID == Obj::HERO || newObj->ID == Obj::RANDOM_HERO))
 	{
-		main->setStatusMessage("Hero cannot be created as NEUTRAL");
-		return;
+		error = "Hero cannot be created as NEUTRAL";
+		return false;
 	}
 	if(defaultPlayer != PlayerColor::NEUTRAL && newObj->ID == Obj::PRISON)
 	{
-		main->setStatusMessage("Prison must be a NEUTRAL");
-		return;
+		error = "Prison must be a NEUTRAL";
+		return false;
 	}
 	
-	Initializer init(newObj, defaultPlayer);
-	
-	_map->getEditManager()->insertObject(newObj);
-	_mapHandler->invalidate(newObj);
-	main->mapChanged();
+	if(newObj->ID == Obj::ARTIFACT && !_map->allowedArtifact.at(newObj->subID))
+	{
+		error = "Artifact is not allowed. Check map settings.";
+		return false;
+	}
+	return true;
 }
 
 void MapController::undo()

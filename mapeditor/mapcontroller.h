@@ -36,12 +36,13 @@ public:
 	void commitObjectErase(int level);
 	void commitObstacleFill(int level);
 	void commitChangeWithoutRedraw();
-	void commitObjectShiftOrCreate(int level);
+	void commitObjectShift(int level);
 	void commitObjectCreate(int level);
 	void commitObjectChange(int level);
 	
 	bool discardObject(int level) const;
 	void createObject(int level, CGObjectInstance * obj) const;
+	bool canPlaceObject(int level, CGObjectInstance * obj, QString & error) const;
 
 	void undo();
 	void redo();

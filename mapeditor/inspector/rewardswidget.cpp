@@ -7,8 +7,9 @@
 #include "../lib/CCreatureHandler.h"
 #include "../lib/StringConstants.h"
 
-RewardsWidget::RewardsWidget(CGPandoraBox & p, QWidget *parent) :
+RewardsWidget::RewardsWidget(const CMap & m, CGPandoraBox & p, QWidget *parent) :
 	QDialog(parent),
+	map(m),
 	pandora(&p),
 	ui(new Ui::RewardsWidget)
 {
@@ -47,25 +48,28 @@ QList<QString> RewardsWidget::getListForType(int typeId)
 			
 		case 6:
 			//abilities
-			for(auto skill : VLC->skillh->objects)
+			for(int i = 0; i < map.allowedAbilities.size(); ++i)
 			{
-				result.append(QString::fromStdString(skill->getName()));
+				if(map.allowedAbilities[i])
+					result.append(QString::fromStdString(VLC->skillh->objects.at(i)->getName()));
 			}
 			break;
 			
 		case 7:
 			//arts
-			for(auto art : VLC->arth->objects)
+			for(int i = 0; i < map.allowedArtifact.size(); ++i)
 			{
-				result.append(QString::fromStdString(art->getName()));
+				if(map.allowedArtifact[i])
+					result.append(QString::fromStdString(VLC->arth->objects.at(i)->getName()));
 			}
 			break;
 			
 		case 8:
 			//spells
-			for(auto spell : VLC->spellh->objects)
+			for(int i = 0; i < map.allowedSpell.size(); ++i)
 			{
-				result.append(QString::fromStdString(spell->getName()));
+				if(map.allowedSpell[i])
+					result.append(QString::fromStdString(VLC->spellh->objects.at(i)->getName()));
 			}
 			break;
 			
@@ -286,13 +290,13 @@ void RewardsWidget::on_rewardsTable_itemSelectionChanged()
 }
 
 
-RewardsPandoraDelegate::RewardsPandoraDelegate(CGPandoraBox & t): pandora(t), QStyledItemDelegate()
+RewardsPandoraDelegate::RewardsPandoraDelegate(const CMap & m, CGPandoraBox & t): map(m), pandora(t), QStyledItemDelegate()
 {
 }
 
 QWidget * RewardsPandoraDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-	return new RewardsWidget(pandora, parent);
+	return new RewardsWidget(map, pandora, parent);
 }
 
 void RewardsPandoraDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const

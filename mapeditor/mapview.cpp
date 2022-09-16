@@ -311,9 +311,21 @@ void MapView::mouseReleaseEvent(QMouseEvent *event)
 			break;
 		//switch position
 		bool tab = false;
-		if(sc->selectionObjectsView.selectionMode == 2 && !sc->selectionObjectsView.shift.isNull())
+		if(sc->selectionObjectsView.selectionMode == 2)
 		{
-			controller->commitObjectShiftOrCreate(sc->level);
+			if(sc->selectionObjectsView.newObject)
+			{
+				QString errorMsg;
+				if(controller->canPlaceObject(sc->level, sc->selectionObjectsView.newObject, errorMsg))
+					controller->commitObjectCreate(sc->level);
+				else
+				{
+					QMessageBox::information(this, "Can't place object", errorMsg);
+					break;
+				}
+			}
+			else
+				controller->commitObjectShift(sc->level);
 		}
 		else
 		{

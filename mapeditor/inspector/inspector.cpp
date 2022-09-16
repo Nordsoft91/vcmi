@@ -2,6 +2,7 @@
 #include "inspector.h"
 #include "../lib/CArtHandler.h"
 #include "../lib/spells/CSpellHandler.h"
+#include "../lib/CHeroHandler.h"
 #include "../lib/CRandomGenerator.h"
 #include "../lib/mapObjects/CObjectClassesHandler.h"
 #include "../lib/mapping/CMap.h"
@@ -14,6 +15,7 @@
 //===============IMPLEMENT OBJECT INITIALIZATION FUNCTIONS================
 Initializer::Initializer(CGObjectInstance * o, const PlayerColor & pl) : defaultPlayer(pl)
 {
+	logGlobal->info("New object instance initialized");
 ///IMPORTANT! initialize order should be from base objects to derived objects
 	INIT_OBJ_TYPE(CGResource);
 	INIT_OBJ_TYPE(CGArtifact);
@@ -98,6 +100,26 @@ void Initializer::initialize(CGHeroInstance * o)
 	if(!o) return;
 	
 	o->tempOwner = defaultPlayer;
+	if(o->ID == Obj::HERO)
+	{
+		for(auto t : VLC->heroh->objects)
+		{
+			if(t->heroClass == VLC->heroh->classes.objects[o->subID].get())
+			{
+				o->type = VLC->heroh->objects[o->subID];
+				break;
+			}
+		}
+	}
+	
+	if(!o->type)
+		o->type = VLC->heroh->objects.at(o->subID);
+	
+	o->name = o->type->getName();
+	o->sex = o->type->sex;
+	o->biography = o->type->biography;
+	o->portrait = o->type->imageIndex;
+	o->randomizeArmy(o->type->heroClass->faction);
 }
 
 void Initializer::initialize(CGTownInstance * o)
@@ -198,6 +220,30 @@ void Inspector::updateProperties(CGHeroInstance * o)
 	if(!o) return;
 	
 	addProperty("Owner", o->tempOwner, o->ID == Obj::PRISON); //field is not editable for prison
+	addProperty<int>("Experience", o->exp, false);
+	addProperty("Hero class", o->type->heroClass->getName(), true);
+	
+	{
+		auto * delegate = new InspectorDelegate;
+		delegate->options << "MALE" << "FEMALE";
+		addProperty<std::string>("Sex", (o->sex ? "FEMALE" : "MALE"), delegate , false);
+	}
+	addProperty("Name", o->name, false);
+	addProperty("Biography", o->biography, new MessageDelegate, false);
+	addProperty("Portrait", o->portrait, false);
+	
+	{
+		auto * delegate = new InspectorDelegate;
+		for(int i = 0; i < VLC->heroh->objects.size(); ++i)
+		{
+			if(map->allowedHeroes.at(i))
+			{
+				if(o->ID == Obj::PRISON || (o->type && VLC->heroh->objects[i]->heroClass->getIndex() == o->type->heroClass->getIndex()))
+					delegate->options << QObject::tr(VLC->heroh->objects[i]->getName().c_str());
+			}
+		}
+		addProperty("Hero type", o->type->getName(), delegate, false);
+	}
 }
 
 void Inspector::updateProperties(CGTownInstance * o)
@@ -279,7 +325,7 @@ void Inspector::updateProperties(CGPandoraBox * o)
 {
 	if(!o) return;
 	
-	auto * delegate = new RewardsPandoraDelegate(*o);
+	auto * delegate = new RewardsPandoraDelegate(*map, *o);
 	addProperty("Reward", PropertyEditorPlaceholder(), delegate, false);
 }
 
@@ -358,122 +404,143 @@ void Inspector::setProperty(const QString & key, const QVariant & value)
 	SET_PROPERTIES(CGPandoraBox);
 }
 
-void Inspector::setProperty(CArmedInstance * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CArmedInstance * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 }
 
-void Inspector::setProperty(CGLighthouse * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGLighthouse * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 }
 
-void Inspector::setProperty(CGPandoraBox * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGPandoraBox * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 }
 
-void Inspector::setProperty(CGTownInstance * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGTownInstance * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Town name")
-		object->name = value.toString().toStdString();
+		o->name = value.toString().toStdString();
 }
 
-void Inspector::setProperty(CGSignBottle * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGSignBottle * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Message")
-		object->message = value.toString().toStdString();
+		o->message = value.toString().toStdString();
 }
 
-void Inspector::setProperty(CGMine * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGMine * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Productivity")
-		object->producedQuantity = value.toString().toInt();
+		o->producedQuantity = value.toString().toInt();
 }
 
-void Inspector::setProperty(CGArtifact * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGArtifact * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Message")
-		object->message = value.toString().toStdString();
+		o->message = value.toString().toStdString();
 	
-	if(object->storedArtifact && key == "Spell")
+	if(o->storedArtifact && key == "Spell")
 	{
 		for(auto spell : VLC->spellh->objects)
 		{
 			if(spell->name == value.toString().toStdString())
 			{
-				object->storedArtifact = CArtifactInstance::createScroll(spell->getId());
+				o->storedArtifact = CArtifactInstance::createScroll(spell->getId());
 				break;
 			}
 		}
 	}
 }
 
-void Inspector::setProperty(CGDwelling * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGDwelling * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 }
 
-void Inspector::setProperty(CGGarrison * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGGarrison * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Removable units")
-		object->removableUnits = stringToBool(value.toString());
+		o->removableUnits = stringToBool(value.toString());
 }
 
-void Inspector::setProperty(CGHeroInstance * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGHeroInstance * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
+	
+	if(key == "Sex")
+		o->sex = value.toString() == "MALE" ? 0 : 1;
+	
+	if(key == "Name")
+		o->name = value.toString().toStdString();
+	
+	if(key == "Hero type")
+	{
+		for(auto t : VLC->heroh->objects)
+		{
+			if(t->getName() == value.toString().toStdString())
+				o->type = t.get();
+		}
+		o->name = o->type->getName();
+		o->sex = o->type->sex;
+		o->biography = o->type->biography;
+		o->portrait = o->type->imageIndex;
+		o->randomizeArmy(o->type->heroClass->faction);
+		updateProperties(); //updating other properties after change
+	}
 }
 
-void Inspector::setProperty(CGShipyard * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGShipyard * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 }
 
-void Inspector::setProperty(CGResource * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGResource * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Amount")
-		object->amount = value.toString().toInt();
+		o->amount = value.toString().toInt();
 }
 
-void Inspector::setProperty(CGCreature * object, const QString & key, const QVariant & value)
+void Inspector::setProperty(CGCreature * o, const QString & key, const QVariant & value)
 {
-	if(!object) return;
+	if(!o) return;
 	
 	if(key == "Message")
-		object->message = value.toString().toStdString();
+		o->message = value.toString().toStdString();
 	if(key == "Character")
 	{
 		//COMPLIANT = 0, FRIENDLY = 1, AGRESSIVE = 2, HOSTILE = 3, SAVAGE = 4
 		if(value == "COMPLIANT")
-			object->character = CGCreature::Character::COMPLIANT;
+			o->character = CGCreature::Character::COMPLIANT;
 		if(value == "FRIENDLY")
-			object->character = CGCreature::Character::FRIENDLY;
+			o->character = CGCreature::Character::FRIENDLY;
 		if(value == "AGRESSIVE")
-			object->character = CGCreature::Character::AGRESSIVE;
+			o->character = CGCreature::Character::AGRESSIVE;
 		if(value == "HOSTILE")
-			object->character = CGCreature::Character::HOSTILE;
+			o->character = CGCreature::Character::HOSTILE;
 		if(value == "SAVAGE")
-			object->character = CGCreature::Character::SAVAGE;
+			o->character = CGCreature::Character::SAVAGE;
 	}
 	if(key == "Never flees")
-		object->neverFlees = stringToBool(value.toString());
+		o->neverFlees = stringToBool(value.toString());
 	if(key == "Not growing")
-		object->notGrowingTeam = stringToBool(value.toString());
+		o->notGrowingTeam = stringToBool(value.toString());
 	if(key == "Amount")
-		object->stacks[SlotID(0)]->count = value.toString().toInt();
+		o->stacks[SlotID(0)]->count = value.toString().toInt();
 }
 
 
@@ -627,9 +694,12 @@ void InspectorDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 {
 	if(QComboBox *ed = qobject_cast<QComboBox *>(editor))
 	{
-		QMap<int, QVariant> data;
-		data[0] = options[ed->currentIndex()];
-		model->setItemData(index, data);
+		if(!options.isEmpty())
+		{
+			QMap<int, QVariant> data;
+			data[0] = options[ed->currentIndex()];
+			model->setItemData(index, data);
+		}
 	}
 	else
 	{

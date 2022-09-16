@@ -2,6 +2,7 @@
 #include "validator.h"
 #include "ui_validator.h"
 #include "../lib/mapObjects/MapObjects.h"
+#include "../lib/CHeroHandler.h"
 
 Validator::Validator(const CMap * map, QWidget *parent) :
 	QDialog(parent),
@@ -39,6 +40,7 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 	
 	try
 	{
+		//check player settings
 		int hplayers = 0;
 		int cplayers = 0;
 		std::map<int, int> amountOfCastles;
@@ -61,8 +63,10 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 		if(!hplayers)
 			issues.emplace_back("No human players allowed to play this map", true);
 
+		//checking all objects in the map
 		for(auto o : map->objects)
 		{
+			//owners for objects
 			if(o->getOwner() == PlayerColor::UNFLAGGABLE)
 			{
 				if(dynamic_cast<CGMine*>(o.get()) ||
@@ -74,6 +78,7 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 					issues.emplace_back(QString("Armored instance %1 is UNFLAGGABLE but must have NEUTRAL or player owner").arg(o->instanceName.c_str()), true);
 				}
 			}
+			//checking towns
 			if(auto * ins = dynamic_cast<CGTownInstance*>(o.get()))
 			{
 				bool has = amountOfCastles.count(ins->getOwner().getNum());
@@ -82,6 +87,7 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 				if(has)
 					++amountOfCastles[ins->getOwner().getNum()];
 			}
+			//checking heroes and prisons
 			if(auto * ins = dynamic_cast<CGHeroInstance*>(o.get()))
 			{
 				if(ins->ID == Obj::PRISON)
@@ -97,13 +103,44 @@ std::list<Validator::Issue> Validator::validate(const CMap * map)
 					else
 						issues.emplace_back(QString("Hero %1: heroes on map are not supported in current version").arg(ins->instanceName.c_str()), false);
 				}
+				if(ins->type)
+				{
+					if(!map->allowedHeroes[ins->type->getId().getNum()])
+						issues.emplace_back(QString("Hero %1 is prohibited by map settings").arg(ins->instanceName.c_str()), false);
+				}
+				else
+					issues.emplace_back(QString("Hero %1 has an empty type and must be removed").arg(ins->instanceName.c_str()), true);
+			}
+			
+			//checking for arts
+			if(auto * ins = dynamic_cast<CGArtifact*>(o.get()))
+			{
+				if(ins->ID == Obj::SPELL_SCROLL)
+				{
+					if(ins->storedArtifact)
+					{
+						if(!map->allowedSpell[ins->storedArtifact->id.getNum()])
+							issues.emplace_back(QString("Spell scroll %1 is prohibited by map settings").arg(ins->instanceName.c_str()), false);
+					}
+					else
+						issues.emplace_back(QString("Spell scroll %1 doesn't have instance assigned and must be removed").arg(ins->instanceName.c_str()), true);
+				}
+				else
+				{
+					if(ins->ID == Obj::ARTIFACT && !map->allowedArtifact[ins->subID])
+					{
+						issues.emplace_back(QString("Artifact %1 is prohibited by map settings").arg(ins->instanceName.c_str()), false);
+					}
+				}
 			}
 		}
 
+		//verification of starting towns
 		for(auto & mp : amountOfCastles)
 			if(mp.second == 0)
 				issues.emplace_back(QString("Player %1 doesn't have any starting town").arg(mp.first), false);
 
+		//verification of map name and description
 		if(map->name.empty())
 			issues.emplace_back("Map name is not specified", false);
 		if(map->description.empty())
