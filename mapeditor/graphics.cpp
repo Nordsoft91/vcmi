@@ -320,13 +320,7 @@ std::shared_ptr<Animation> Graphics::getHeroAnimation(const std::shared_ptr<cons
 }
 
 std::shared_ptr<Animation> Graphics::getAnimation(const std::shared_ptr<const ObjectTemplate> info)
-{
-	//the only(?) invisible object
-	if(info->id == Obj::EVENT)
-	{
-		return std::shared_ptr<Animation>();
-	}
-	
+{	
 	if(info->animationFile.empty())
 	{
 		logGlobal->warn("Def name for obj (%d,%d) is empty!", info->id, info->subid);
