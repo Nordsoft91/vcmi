@@ -5,6 +5,7 @@
 #include "../lib/CSkillHandler.h"
 #include "../lib/spells/CSpellHandler.h"
 #include "../lib/CArtHandler.h"
+#include "../lib/CHeroHandler.h"
 
 MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :
 	QDialog(parent),
@@ -45,6 +46,14 @@ MapSettings::MapSettings(MapController & ctrl, QWidget *parent) :
 		item->setCheckState(controller.map()->allowedArtifact[i] ? Qt::Checked : Qt::Unchecked);
 		ui->listArts->addItem(item);
 	}
+	for(int i = 0; i < controller.map()->allowedHeroes.size(); ++i)
+	{
+		auto * item = new QListWidgetItem(QString::fromStdString(VLC->heroh->objects[i]->getName()));
+		item->setData(Qt::UserRole, QVariant::fromValue(i));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(controller.map()->allowedHeroes[i] ? Qt::Checked : Qt::Unchecked);
+		ui->listHeroes->addItem(item);
+	}
 
 	//ui8 difficulty;
 	//ui8 levelLimit;
@@ -82,6 +91,11 @@ void MapSettings::on_pushButton_clicked()
 	{
 		auto * item = ui->listArts->item(i);
 		controller.map()->allowedArtifact[i] = item->checkState() == Qt::Checked;
+	}
+	for(int i = 0; i < controller.map()->allowedHeroes.size(); ++i)
+	{
+		auto * item = ui->listHeroes->item(i);
+		controller.map()->allowedHeroes[i] = item->checkState() == Qt::Checked;
 	}
 	
 	close();
