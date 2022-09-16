@@ -590,6 +590,7 @@ void MainWindow::loadObjectsTree()
 	addGroupIntoCatalog("HEROES", false, false, Obj::HERO);
 	addGroupIntoCatalog("HEROES", false, false, Obj::RANDOM_HERO);
 	addGroupIntoCatalog("HEROES", false, false, Obj::HERO_PLACEHOLDER);
+	addGroupIntoCatalog("HEROES", false, false, Obj::BOAT);
 	addGroupIntoCatalog("ARTIFACTS", true, false, Obj::ARTIFACT);
 	addGroupIntoCatalog("ARTIFACTS", false, false, Obj::RANDOM_ART);
 	addGroupIntoCatalog("ARTIFACTS", false, false, Obj::RANDOM_TREASURE_ART);
@@ -661,7 +662,7 @@ void MainWindow::loadObjectsTree()
 	addGroupIntoCatalog("QUESTS", true, false, Obj::EYE_OF_MAGI);
 	addGroupIntoCatalog("QUESTS", true, false, Obj::BORDERGUARD);
 	addGroupIntoCatalog("QUESTS", true, false, Obj::KEYMASTER);
-	addGroupIntoCatalog("<unknown>", true, false, Obj::WOG_OBJECT);
+	addGroupIntoCatalog("wog object", true, false, Obj::WOG_OBJECT);
 	addGroupIntoCatalog("OBSTACLES", true);
 	addGroupIntoCatalog("OTHER", false);
 	}

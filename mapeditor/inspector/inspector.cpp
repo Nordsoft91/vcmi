@@ -329,6 +329,16 @@ void Inspector::updateProperties(CGPandoraBox * o)
 	addProperty("Reward", PropertyEditorPlaceholder(), delegate, false);
 }
 
+void Inspector::updateProperties(CGEvent * o)
+{
+	if(!o) return;
+	
+	addProperty("Remove after", o->removeAfterVisit, InspectorDelegate::boolDelegate(), false);
+	addProperty("Human trigger", o->humanActivate, InspectorDelegate::boolDelegate(), false);
+	addProperty("Cpu trigger", o->computerActivate, InspectorDelegate::boolDelegate(), false);
+	//ui8 availableFor; //players whom this event is available for
+}
+
 
 void Inspector::updateProperties()
 {
@@ -369,6 +379,7 @@ void Inspector::updateProperties()
 	UPDATE_OBJ_PROPERTIES(CGSignBottle);
 	UPDATE_OBJ_PROPERTIES(CGLighthouse);
 	UPDATE_OBJ_PROPERTIES(CGPandoraBox);
+	UPDATE_OBJ_PROPERTIES(CGEvent);
 	
 	table->show();
 }
@@ -402,6 +413,7 @@ void Inspector::setProperty(const QString & key, const QVariant & value)
 	SET_PROPERTIES(CGSignBottle);
 	SET_PROPERTIES(CGLighthouse);
 	SET_PROPERTIES(CGPandoraBox);
+	SET_PROPERTIES(CGEvent);
 }
 
 void Inspector::setProperty(CArmedInstance * o, const QString & key, const QVariant & value)
@@ -417,6 +429,20 @@ void Inspector::setProperty(CGLighthouse * o, const QString & key, const QVarian
 void Inspector::setProperty(CGPandoraBox * o, const QString & key, const QVariant & value)
 {
 	if(!o) return;
+}
+
+void Inspector::setProperty(CGEvent * o, const QString & key, const QVariant & value)
+{
+	if(!o) return;
+	
+	if("Remove after")
+		o->removeAfterVisit = stringToBool(value.toString());
+	
+	if("Human trigger")
+		o->humanActivate = stringToBool(value.toString());
+	
+	if("Cpu trigger")
+		o->computerActivate = stringToBool(value.toString());
 }
 
 void Inspector::setProperty(CGTownInstance * o, const QString & key, const QVariant & value)

@@ -35,6 +35,7 @@ public:
 	DECLARE_OBJ_TYPE(CGCreature);
 	DECLARE_OBJ_TYPE(CGSignBottle);
 	DECLARE_OBJ_TYPE(CGLighthouse);
+	//DECLARE_OBJ_TYPE(CGEvent);
 	//DECLARE_OBJ_TYPE(CGPandoraBox);
 	
 	
@@ -63,6 +64,7 @@ protected:
 	DECLARE_OBJ_PROPERTY_METHODS(CGSignBottle);
 	DECLARE_OBJ_PROPERTY_METHODS(CGLighthouse);
 	DECLARE_OBJ_PROPERTY_METHODS(CGPandoraBox);
+	DECLARE_OBJ_PROPERTY_METHODS(CGEvent);
 
 //===============DECLARE PROPERTY VALUE TYPE==============================
 	QTableWidgetItem * addProperty(unsigned int value);
