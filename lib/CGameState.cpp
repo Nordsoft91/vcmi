@@ -765,17 +765,34 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 		initRandomFactionsForPlayers();
 		randomizeMapObjects();
 		placeStartingHeroes();
-		initStartingResources();
-		initHeroes();
-		initStartingBonus();
+	}
+	
+	initStartingResources();
+	initHeroes(scenarioOps->map);
+	initStartingBonus();
+	
+	if(!scenarioOps->map)
+	{
 		initTowns();
 		initMapObjects();
 		buildBonusSystemTree();
 		initVisitingAndGarrisonedHeroes();
+	}
+	else
+	{
+		buildGlobalTeamPlayerTree();
+	}
+	
+	if(!scenarioOps->map)
+	{
 		logGlobal->debug("\tChecking objectives");
 		map->checkForObjectives(); //needs to be run when all objects are properly placed
-	
-		scenarioOps->map = map;
+		if(0)
+			scenarioOps->map = map;
+	}
+	else
+	{
+		updateOnLoad(scenarioOps);
 	}
 	
 	initFogOfWar();
@@ -1444,7 +1461,7 @@ void CGameState::initStartingResources()
 	}
 }
 
-void CGameState::initHeroes()
+void CGameState::initHeroes(bool readOnly)
 {
 	for(auto hero : map->heroesOnMap)  //heroes instances initialization
 	{
@@ -1454,15 +1471,22 @@ void CGameState::initHeroes()
 			continue;
 		}
 
-		hero->initHero(getRandomGenerator());
+		if(!readOnly)
+		{
+			hero->initHero(getRandomGenerator());
+			map->allHeroes[hero->type->ID.getNum()] = hero;
+		}
+		
 		getPlayerState(hero->getOwner())->heroes.push_back(hero);
-		map->allHeroes[hero->type->ID.getNum()] = hero;
 	}
 
-	for(auto obj : map->objects) //prisons
+	if(!readOnly)
 	{
-		if(obj && obj->ID == Obj::PRISON)
-			map->allHeroes[obj->subID] = dynamic_cast<CGHeroInstance*>(obj.get());
+		for(auto obj : map->objects) //prisons
+		{
+			if(obj && obj->ID == Obj::PRISON)
+				map->allHeroes[obj->subID] = dynamic_cast<CGHeroInstance*>(obj.get());
+		}
 	}
 
 	std::set<HeroTypeID> heroesToCreate = getUnusedAllowedHeroes(); //ids of heroes to be created and put into the pool
@@ -1470,21 +1494,33 @@ void CGameState::initHeroes()
 	{
 		if(!vstd::contains(heroesToCreate, HeroTypeID(ph->subID)))
 			continue;
-		ph->initHero(getRandomGenerator());
+		
+		if(!readOnly)
+			ph->initHero(getRandomGenerator());
+		
 		hpool.heroesPool[ph->subID] = ph;
 		hpool.pavailable[ph->subID] = 0xff;
 		heroesToCreate.erase(ph->type->ID);
 
-		map->allHeroes[ph->subID] = ph;
+		if(!readOnly)
+			map->allHeroes[ph->subID] = ph;
 	}
 
 	for(HeroTypeID htype : heroesToCreate) //all not used allowed heroes go with default state into the pool
 	{
-		auto  vhi = new CGHeroInstance();
-		vhi->initHero(getRandomGenerator(), htype);
-
+		CGHeroInstance * vhi = nullptr;
 		int typeID = htype.getNum();
-		map->allHeroes[typeID] = vhi;
+		
+		if(readOnly)
+		{
+			vhi = map->allHeroes[typeID];
+		}
+		else
+		{
+			auto vhi = new CGHeroInstance();
+			vhi->initHero(getRandomGenerator(), htype);
+			map->allHeroes[typeID] = vhi;
+		}
 		hpool.heroesPool[typeID] = vhi;
 		hpool.pavailable[typeID] = 0xff;
 	}
@@ -2702,8 +2738,7 @@ std::map<ui32, ConstTransitivePtr<CGHeroInstance> > CGameState::unusedHeroesFrom
 
 void CGameState::buildBonusSystemTree()
 {
-	buildGlobalTeamPlayerTree();
-	attachArmedObjects();
+	deserializationFix();
 
 	for(CGTownInstance *t : map->towns)
 	{

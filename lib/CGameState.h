@@ -268,7 +268,7 @@ private:
 	void placeStartingHeroes();
 	void placeStartingHero(PlayerColor playerColor, HeroTypeID heroTypeId, int3 townPos);
 	void initStartingResources();
-	void initHeroes();
+	void initHeroes(bool readOnly);
 	void giveCampaignBonusToHero(CGHeroInstance * hero);
 	void initFogOfWar();
 	void initStartingBonus();
