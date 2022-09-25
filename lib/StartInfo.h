@@ -10,6 +10,7 @@
 #pragma once
 
 #include "GameConstants.h"
+#include "mapping/CMap.h"
 
 VCMI_LIB_NAMESPACE_BEGIN
 
@@ -86,6 +87,8 @@ struct DLL_LINKAGE StartInfo
 	std::string mapname; // empty for random map, otherwise name of the map or savegame
 	bool createRandomMap() const { return mapGenOptions.get() != nullptr; }
 	std::shared_ptr<CMapGenOptions> mapGenOptions;
+	ConstTransitivePtr<CMap> map;
+	bool mapOwner;
 
 	std::shared_ptr<CCampaignState> campState;
 
@@ -108,11 +111,16 @@ struct DLL_LINKAGE StartInfo
 		h & turnTime;
 		h & mapname;
 		h & mapGenOptions;
+		bool sps = h.smartPointerSerialization;
+		h.smartPointerSerialization = true;
+		h & map;
+		h.smartPointerSerialization = sps;
+		h & mapOwner;
 		h & campState;
 	}
 
 	StartInfo() : mode(INVALID), difficulty(0), seedToBeUsed(0), seedPostInit(0),
-		mapfileChecksum(0), turnTime(0)
+		mapfileChecksum(0), turnTime(0), mapOwner(true)
 	{
 
 	}

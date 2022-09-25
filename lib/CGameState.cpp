@@ -728,41 +728,56 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	scenarioOps = CMemorySerializer::deepCopy(*si).release();
 	initialOpts = CMemorySerializer::deepCopy(*si).release();
 	si = nullptr;
-
-	switch(scenarioOps->mode)
+	
+	if(scenarioOps->map)
 	{
-	case StartInfo::NEW_GAME:
-		initNewGame(mapService, allowSavingRandomMap);
-		break;
-	case StartInfo::CAMPAIGN:
-		initCampaign();
-		break;
-	default:
-		logGlobal->error("Wrong mode: %d", static_cast<int>(scenarioOps->mode));
-		return;
+		map = CMemorySerializer::deepCopy(*scenarioOps->map).release();
+		map->checksum = scenarioOps->mapfileChecksum;
 	}
+	else
+	{
+		switch(scenarioOps->mode)
+		{
+		case StartInfo::NEW_GAME:
+			initNewGame(mapService, allowSavingRandomMap);
+			break;
+		case StartInfo::CAMPAIGN:
+			initCampaign();
+			break;
+		default:
+			logGlobal->error("Wrong mode: %d", static_cast<int>(scenarioOps->mode));
+			return;
+		}
+	}
+	
 	VLC->arth->initAllowedArtifactsList(map->allowedArtifact);
 	logGlobal->info("Map loaded!");
 
 	checkMapChecksum();
-
 	day = 0;
-
 	logGlobal->debug("Initialization:");
 
 	initPlayerStates();
-	placeCampaignHeroes();
-	initGrailPosition();
-	initRandomFactionsForPlayers();
-	randomizeMapObjects();
-	placeStartingHeroes();
-	initStartingResources();
-	initHeroes();
-	initStartingBonus();
-	initTowns();
-	initMapObjects();
-	buildBonusSystemTree();
-	initVisitingAndGarrisonedHeroes();
+	if(!scenarioOps->map)
+	{
+		placeCampaignHeroes();
+		initGrailPosition();
+		initRandomFactionsForPlayers();
+		randomizeMapObjects();
+		placeStartingHeroes();
+		initStartingResources();
+		initHeroes();
+		initStartingBonus();
+		initTowns();
+		initMapObjects();
+		buildBonusSystemTree();
+		initVisitingAndGarrisonedHeroes();
+		logGlobal->debug("\tChecking objectives");
+		map->checkForObjectives(); //needs to be run when all objects are properly placed
+	
+		scenarioOps->map = map;
+	}
+	
 	initFogOfWar();
 
 	// Explicitly initialize static variables
@@ -775,20 +790,12 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 		CGObelisk::visited[elem.first] = 0;
 	}
 
-	logGlobal->debug("\tChecking objectives");
-	map->checkForObjectives(); //needs to be run when all objects are properly placed
-
-	auto seedAfterInit = getRandomGenerator().nextInt();
-	logGlobal->info("Seed after init is %d (before was %d)", seedAfterInit, scenarioOps->seedToBeUsed);
-	if(scenarioOps->seedPostInit > 0)
+	if(scenarioOps->seedPostInit == 0)
 	{
-		//RNG must be in the same state on all machines when initialization is done (otherwise we have desync)
-		assert(scenarioOps->seedPostInit == seedAfterInit);
+		scenarioOps->seedPostInit = getRandomGenerator().nextInt(); //store the post init "seed"
 	}
-	else
-	{
-		scenarioOps->seedPostInit = seedAfterInit; //store the post init "seed"
-	}
+	logGlobal->info("Seed after init is %d (before was %d)", scenarioOps->seedPostInit, scenarioOps->seedToBeUsed);
+	getRandomGenerator().setSeed(scenarioOps->seedPostInit);
 }
 
 void CGameState::updateEntity(Metatype metatype, int32_t index, const JsonNode & data)
