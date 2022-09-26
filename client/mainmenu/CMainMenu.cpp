@@ -293,8 +293,8 @@ CMainMenu::~CMainMenu()
 {
 	boost::unique_lock<boost::recursive_mutex> lock(*CPlayerInterface::pim);
 
-	if(GH.curInt == this)
-		GH.curInt = nullptr;
+	if(GH.currentInterface == this)
+		GH.currentInterface = nullptr;
 }
 
 void CMainMenu::update()

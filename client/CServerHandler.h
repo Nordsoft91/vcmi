@@ -101,7 +101,7 @@ public:
 	std::unique_ptr<CStopWatch> th;
 	std::shared_ptr<boost::thread> threadRunLocalServer;
 
-	std::shared_ptr<CConnection> c;
+	std::shared_ptr<CConnection> serverConnection;
 	CClient * client;
 
 	CondSh<bool> campaignServerRestartLock;

@@ -310,7 +310,7 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 		nInt->loadGame(h, version);
 
 		// Client no longer handle this player at all
-		if(!vstd::contains(CSH->getAllClientPlayers(CSH->c->connectionID), pid))
+		if(!vstd::contains(CSH->getAllClientPlayers(CSH->serverConnection->connectionID), pid))
 		{
 			logGlobal->trace("Player %s is not belong to this client. Destroying interface", pid);
 		}
@@ -364,7 +364,7 @@ void CClient::endGame()
 	for(auto & i : playerint)
 		i.second->finish();
 
-	GH.curInt = nullptr;
+	GH.currentInterface = nullptr;
 	{
 		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
 		logNetwork->info("Ending current game!");
@@ -413,7 +413,7 @@ void CClient::initPlayerEnvironments()
 {
 	playerEnvironments.clear();
 
-	auto allPlayers = CSH->getAllClientPlayers(CSH->c->connectionID);
+	auto allPlayers = CSH->getAllClientPlayers(CSH->serverConnection->connectionID);
 
 	for(auto & color : allPlayers)
 	{
@@ -432,7 +432,7 @@ void CClient::initPlayerInterfaces()
 	for(auto & elem : gs->scenarioOps->playerInfos)
 	{
 		PlayerColor color = elem.first;
-		if(!vstd::contains(CSH->getAllClientPlayers(CSH->c->connectionID), color))
+		if(!vstd::contains(CSH->getAllClientPlayers(CSH->serverConnection->connectionID), color))
 			continue;
 
 		if(!vstd::contains(playerint, color))
@@ -457,7 +457,7 @@ void CClient::initPlayerInterfaces()
 		installNewPlayerInterface(std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR), PlayerColor::SPECTATOR, true);
 	}
 
-	if(CSH->getAllClientPlayers(CSH->c->connectionID).count(PlayerColor::NEUTRAL))
+	if(CSH->getAllClientPlayers(CSH->serverConnection->connectionID).count(PlayerColor::NEUTRAL))
 		installNewBattleInterface(CDynLibHandler::getNewBattleAI(settings["server"]["neutralAI"].String()), PlayerColor::NEUTRAL);
 
 	logNetwork->trace("Initialized player interfaces %d ms", CSH->th->getDiff());
@@ -547,7 +547,7 @@ int CClient::sendRequest(const CPackForServer * request, PlayerColor player)
 	waitingRequest.pushBack(requestID);
 	request->requestID = requestID;
 	request->player = player;
-	CSH->c->sendPack(request);
+	CSH->serverConnection->sendPack(request);
 	if(vstd::contains(playerint, player))
 		playerint[player]->requestSent(request, requestID);
 

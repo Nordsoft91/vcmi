@@ -164,7 +164,7 @@ void CPlayerInterface::yourTurn()
 		boost::unique_lock<boost::mutex> lock(eventsM); //block handling events until interface is ready
 
 		LOCPLINT = this;
-		GH.curInt = this;
+		GH.currentInterface = this;
 		adventureInt->selection = nullptr;
 
 		NotificationHandler::notify("Your turn");
@@ -1640,7 +1640,7 @@ void CPlayerInterface::playerBlocked(int reason, bool start)
 			//one of our players who isn't last in order got attacked not by our another player (happens for example in hotseat mode)
 			boost::unique_lock<boost::mutex> lock(eventsM); //TODO: copied from yourTurn, no idea if it's needed
 			LOCPLINT = this;
-			GH.curInt = this;
+			GH.currentInterface = this;
 			adventureInt->selection = nullptr;
 			adventureInt->setPlayer(playerID);
 			std::string msg = CGI->generaltexth->localizedTexts["adventureMap"]["playerAttacked"].String();
@@ -2181,7 +2181,7 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 		//we assume GH.curInt == LOCPLINT
 		auto previousInterface = LOCPLINT; //without multiple player interfaces some of lines below are useless, but for hotseat we wanna swap player interface temporarily
 		LOCPLINT = this; //this is needed for dialog to show and avoid freeze, dialog showing logic should be reworked someday
-		GH.curInt = this; //waiting for dialogs requires this to get events
+		GH.currentInterface = this; //waiting for dialogs requires this to get events
 		if(!makingTurn)
 		{
 			makingTurn = true; //also needed for dialog to show with current implementation
@@ -2191,7 +2191,7 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 		else
 			waitForAllDialogs();
 
-		GH.curInt = previousInterface;
+		GH.currentInterface = previousInterface;
 		LOCPLINT = previousInterface;
 
 		if(CSH->howManyPlayerInterfaces() == 1 && !settings["session"]["spectate"].Bool()) //all human players eliminated
@@ -2219,7 +2219,7 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 			requestReturningToMainMenu(false);
 		}
 
-		if (GH.curInt == this) GH.curInt = nullptr;
+		if (GH.currentInterface == this) GH.currentInterface = nullptr;
 	}
 	else
 	{
@@ -2632,7 +2632,7 @@ void CPlayerInterface::playerStartsTurn(PlayerColor player)
 
 	if(CSH->howManyPlayerInterfaces() == 1)
 	{
-		GH.curInt = this;
+		GH.currentInterface = this;
 		adventureInt->startTurn();
 	}
 	if (player != playerID && this == LOCPLINT)

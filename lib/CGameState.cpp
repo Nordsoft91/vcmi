@@ -727,6 +727,8 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	getRandomGenerator().setSeed(si->seedToBeUsed);
 	scenarioOps = CMemorySerializer::deepCopy(*si).release();
 	initialOpts = CMemorySerializer::deepCopy(*si).release();
+	delete initialOpts->map.get();
+	initialOpts->map = nullptr;
 	si = nullptr;
 	
 	if(scenarioOps->map)

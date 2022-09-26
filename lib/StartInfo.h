@@ -110,15 +110,17 @@ struct DLL_LINKAGE StartInfo
 		h & turnTime;
 		h & mapname;
 		h & mapGenOptions;
-		bool sps = h.smartPointerSerialization;
-		h.smartPointerSerialization = true;
-		h & map;
-		h.smartPointerSerialization = sps;
+		{ //special workaround to transfer map over network
+			bool sps = h.smartPointerSerialization;
+			h.smartPointerSerialization = true;
+			h & map;
+			h.smartPointerSerialization = sps;
+		}
 		h & campState;
 	}
 
 	StartInfo() : mode(INVALID), difficulty(0), seedToBeUsed(0), seedPostInit(0),
-		mapfileChecksum(0), turnTime(0)
+		mapfileChecksum(0), turnTime(0), map(nullptr)
 	{
 
 	}

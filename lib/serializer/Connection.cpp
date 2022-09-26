@@ -272,7 +272,7 @@ void CConnection::disableSmartVectorMemberSerialization()
 	CSerializer::smartVectorMembersSerialization = false;
 }
 
-void CConnection::enableSmartVectorMemberSerializatoin()
+void CConnection::enableSmartVectorMemberSerialization()
 {
 	CSerializer::smartVectorMembersSerialization = true;
 }

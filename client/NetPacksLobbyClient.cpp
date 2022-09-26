@@ -31,9 +31,9 @@
 bool LobbyClientConnected::applyOnLobbyHandler(CServerHandler * handler)
 {
 	// Check if it's LobbyClientConnected for our client
-	if(uuid == handler->c->uuid)
+	if(uuid == handler->serverConnection->uuid)
 	{
-		handler->c->connectionID = clientId;
+		handler->serverConnection->connectionID = clientId;
 		if(!settings["session"]["headless"].Bool())
 			GH.pushIntT<CLobbyScreen>(static_cast<ESelectionScreen>(handler->screenType));
 		handler->state = EClientState::LOBBY;

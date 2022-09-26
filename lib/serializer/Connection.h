@@ -99,7 +99,7 @@ public:
 	void disableSmartPointerSerialization();
 	void enableSmartPointerSerialization();
 	void disableSmartVectorMemberSerialization();
-	void enableSmartVectorMemberSerializatoin();
+	void enableSmartVectorMemberSerialization();
 
 	void enterLobbyConnectionMode();
 	void enterGameplayConnectionMode(CGameState * gs);

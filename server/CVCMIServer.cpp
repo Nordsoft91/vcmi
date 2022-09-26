@@ -232,8 +232,7 @@ bool CVCMIServer::prepareToStartGame()
 		boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 	}
 
-	if(!gh)
-		gh = std::make_shared<CGameHandler>(this);
+	gh = std::make_shared<CGameHandler>(this);
 	switch(si->mode)
 	{
 	case StartInfo::CAMPAIGN:

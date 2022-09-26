@@ -126,7 +126,7 @@ void CServerHandler::resetStateForLobby(const StartInfo::EMode mode, const std::
 	state = EClientState::NONE;
 	th = make_unique<CStopWatch>();
 	packsForLobbyScreen.clear();
-	c.reset();
+	serverConnection.reset();
 	si = std::make_shared<StartInfo>();
 	playerNames.clear();
 	si->difficulty = 1;
@@ -251,12 +251,12 @@ void CServerHandler::startLocalServerAndConnect()
 void CServerHandler::justConnectToServer(const std::string & addr, const ui16 port)
 {
 	state = EClientState::CONNECTING;
-	while(!c && state != EClientState::CONNECTION_CANCELLED)
+	while(!serverConnection && state != EClientState::CONNECTION_CANCELLED)
 	{
 		try
 		{
 			logNetwork->info("Establishing connection...");
-			c = std::make_shared<CConnection>(
+			serverConnection = std::make_shared<CConnection>(
 					addr.size() ? addr : settings["server"]["server"].String(),
 					port ? port : getDefaultPort(),
 					NAME, uuid);
@@ -271,12 +271,12 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 	if(state == EClientState::CONNECTION_CANCELLED)
 		logNetwork->info("Connection aborted by player!");
 	else
-		c->handler = std::make_shared<boost::thread>(&CServerHandler::threadHandleConnection, this);
+		serverConnection->handler = std::make_shared<boost::thread>(&CServerHandler::threadHandleConnection, this);
 }
 
 void CServerHandler::applyPacksOnLobbyScreen()
 {
-	if(!c || !c->handler)
+	if(!serverConnection || !serverConnection->handler)
 		return;
 
 	boost::unique_lock<boost::recursive_mutex> lock(*mx);
@@ -293,33 +293,33 @@ void CServerHandler::applyPacksOnLobbyScreen()
 
 void CServerHandler::stopServerConnection()
 {
-	if(c->handler)
+	if(serverConnection->handler)
 	{
-		while(!c->handler->timed_join(boost::posix_time::milliseconds(50)))
+		while(!serverConnection->handler->timed_join(boost::posix_time::milliseconds(50)))
 			applyPacksOnLobbyScreen();
-		c->handler->join();
+		serverConnection->handler->join();
 	}
 }
 
 std::set<PlayerColor> CServerHandler::getHumanColors()
 {
-	return clientHumanColors(c->connectionID);
+	return clientHumanColors(serverConnection->connectionID);
 }
 
 
 PlayerColor CServerHandler::myFirstColor() const
 {
-	return clientFirstColor(c->connectionID);
+	return clientFirstColor(serverConnection->connectionID);
 }
 
 bool CServerHandler::isMyColor(PlayerColor color) const
 {
-	return isClientColor(c->connectionID, color);
+	return isClientColor(serverConnection->connectionID, color);
 }
 
 ui8 CServerHandler::myFirstId() const
 {
-	return clientFirstId(c->connectionID);
+	return clientFirstId(serverConnection->connectionID);
 }
 
 bool CServerHandler::isServerLocal() const
@@ -332,12 +332,12 @@ bool CServerHandler::isServerLocal() const
 
 bool CServerHandler::isHost() const
 {
-	return c && hostClientId == c->connectionID;
+	return serverConnection && hostClientId == serverConnection->connectionID;
 }
 
 bool CServerHandler::isGuest() const
 {
-	return !c || hostClientId != c->connectionID;
+	return !serverConnection || hostClientId != serverConnection->connectionID;
 }
 
 ui16 CServerHandler::getDefaultPort()
@@ -370,7 +370,7 @@ void CServerHandler::sendClientDisconnecting()
 
 	state = EClientState::DISCONNECTING;
 	LobbyClientDisconnected lcd;
-	lcd.clientId = c->connectionID;
+	lcd.clientId = serverConnection->connectionID;
 	logNetwork->info("Connection has been requested to be closed.");
 	if(isServerLocal())
 	{
@@ -511,6 +511,7 @@ void CServerHandler::sendStartGame(bool allowOnlyAI) const
 		lsg.initializedStartInfo = std::make_shared<StartInfo>(* const_cast<StartInfo *>(client->getStartInfo(true)));
 		lsg.initializedStartInfo->mode = StartInfo::NEW_GAME;
 		lsg.initializedStartInfo->seedToBeUsed = lsg.initializedStartInfo->seedPostInit = 0;
+		lsg.initializedStartInfo->map = nullptr; //delete?
 		* si = * lsg.initializedStartInfo;
 	}
 	sendLobbyPack(lsg);
@@ -518,8 +519,14 @@ void CServerHandler::sendStartGame(bool allowOnlyAI) const
 
 void CServerHandler::startGameplay()
 {
+	if(!serverConnection)
+		return;
+	
 	if(CMM)
 		CMM->disable();
+	
+	if(client)
+		delete client;
 	client = new CClient();
 
 	switch(si->mode)
@@ -537,7 +544,7 @@ void CServerHandler::startGameplay()
 		throw std::runtime_error("Invalid mode");
 	}
 	// After everything initialized we can accept CPackToClient netpacks
-	c->enterGameplayConnectionMode(client->gameState());
+	serverConnection->enterGameplayConnectionMode(client->gameState());
 	state = EClientState::GAMEPLAY;
 }
 
@@ -558,12 +565,12 @@ void CServerHandler::endGameplay(bool closeConnection, bool restart)
 		if(CMM)
 		{
 			GH.terminate_cond->setn(false);
-			GH.curInt = CMM.get();
+			GH.currentInterface = CMM.get();
 			CMM->enable();
 		}
 		else
 		{
-			GH.curInt = CMainMenu::create().get();
+			GH.currentInterface = CMainMenu::create().get();
 		}
 	}
 }
@@ -605,7 +612,7 @@ ui8 CServerHandler::getLoadMode()
 			return ELoadMode::CAMPAIGN;
 		for(auto pn : playerNames)
 		{
-			if(pn.second.connection != c->connectionID)
+			if(pn.second.connection != serverConnection->connectionID)
 				return ELoadMode::MULTI;
 		}
 		if(howManyPlayerInterfaces() > 1)  //this condition will work for hotseat mode OR multiplayer with allowed more than 1 color per player to control
@@ -669,17 +676,17 @@ void CServerHandler::debugStartTest(std::string filename, bool save)
 void CServerHandler::threadHandleConnection()
 {
 	setThreadName("CServerHandler::threadHandleConnection");
-	c->enterLobbyConnectionMode();
+	serverConnection->enterLobbyConnectionMode();
 
 	try
 	{
 		sendClientConnecting();
-		while(c->connected)
+		while(serverConnection->connected)
 		{
 			while(state == EClientState::STARTING)
 				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 
-			CPack * pack = c->retrievePack();
+			CPack * pack = serverConnection->retrievePack();
 			if(state == EClientState::DISCONNECTING)
 			{
 				// FIXME: server shouldn't really send netpacks after it's tells client to disconnect
@@ -722,7 +729,7 @@ void CServerHandler::threadHandleConnection()
 			else
 			{
 				auto lcd = new LobbyClientDisconnected();
-				lcd->clientId = c->connectionID;
+				lcd->clientId = serverConnection->connectionID;
 				boost::unique_lock<boost::recursive_mutex> lock(*mx);
 				packsForLobbyScreen.push_back(lcd);
 			}
@@ -791,5 +798,5 @@ void CServerHandler::onServerFinished()
 void CServerHandler::sendLobbyPack(const CPackForLobby & pack) const
 {
 	if(state != EClientState::STARTING)
-		c->sendPack(&pack);
+		serverConnection->sendPack(&pack);
 }

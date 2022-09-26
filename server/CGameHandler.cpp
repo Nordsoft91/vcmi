@@ -1661,6 +1661,7 @@ CGameHandler::CGameHandler(CVCMIServer * lobby)
 	visitObjectAfterVictory = false;
 
 	spellEnv = new ServerSpellCastEnvironment(this);
+	gs = nullptr;
 }
 
 CGameHandler::~CGameHandler()

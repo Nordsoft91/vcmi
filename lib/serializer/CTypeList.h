@@ -158,7 +158,7 @@ public:
 		auto &baseType = typeid(typename std::remove_cv<TInput>::type);
 		auto derivedType = getTypeInfo(inputPtr);
 
-		if (strcmp(baseType.name(), derivedType->name()) == 0)
+		if (derivedType && strcmp(baseType.name(), derivedType->name()) == 0)
 		{
 			return const_cast<void*>(reinterpret_cast<const void*>(inputPtr));
 		}

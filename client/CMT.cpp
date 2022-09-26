@@ -493,7 +493,7 @@ int main(int argc, char * argv[])
 	}
 	else
 	{
-		GH.curInt = CMainMenu::create().get();
+		GH.currentInterface = CMainMenu::create().get();
 	}
 
 	if(!settings["session"]["headless"].Bool())
@@ -542,7 +542,7 @@ void printInfoAboutIntObject(const CIntObject *obj, int level)
 void removeGUI()
 {
 	// CClient::endGame
-	GH.curInt = nullptr;
+	GH.currentInterface = nullptr;
 	if(GH.topInt())
 		GH.topInt()->deactivate();
 	GH.listInt.clear();

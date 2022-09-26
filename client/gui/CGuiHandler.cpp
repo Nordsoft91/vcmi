@@ -458,8 +458,8 @@ void CGuiHandler::renderFrame()
 		// If we are here, pim mutex has been successfully locked - let's store it in a safe RAII lock.
 		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim, boost::adopt_lock);
 
-		if(nullptr != curInt)
-			curInt->update();
+		if(nullptr != currentInterface)
+			currentInterface->update();
 
 		if(settings["general"]["showfps"].Bool())
 			drawFPSCounter();
@@ -484,7 +484,7 @@ CGuiHandler::CGuiHandler()
 	: lastClick(-500, -500),lastClickTime(0), defActionsDef(0), captureChildren(false)
 {
 	continueEventHandling = true;
-	curInt = nullptr;
+	currentInterface = nullptr;
 	current = nullptr;
 	statusbar = nullptr;
 

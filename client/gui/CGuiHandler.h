@@ -97,7 +97,7 @@ public:
 	std::vector<std::shared_ptr<IShowActivatable>> objsToBlit;
 
 	SDL_Event * current; //current event - can be set to nullptr to stop handling event
-	IUpdateable *curInt;
+	IUpdateable *currentInterface;
 
 	Point lastClick;
 	unsigned lastClickTime;
