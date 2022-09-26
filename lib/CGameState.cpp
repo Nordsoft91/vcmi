@@ -725,15 +725,14 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	preInitAuto();
 	logGlobal->info("\tUsing random seed: %d", si->seedToBeUsed);
 	getRandomGenerator().setSeed(si->seedToBeUsed);
+	auto remoteMap = si->map;
+	si->map = nullptr;
 	scenarioOps = CMemorySerializer::deepCopy(*si).release();
 	initialOpts = CMemorySerializer::deepCopy(*si).release();
-	delete initialOpts->map.get();
-	initialOpts->map = nullptr;
-	si = nullptr;
 	
-	if(scenarioOps->map)
+	if(remoteMap)
 	{
-		map = CMemorySerializer::deepCopy(*scenarioOps->map).release();
+		map = remoteMap;
 		map->checksum = scenarioOps->mapfileChecksum;
 	}
 	else
@@ -760,7 +759,7 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	logGlobal->debug("Initialization:");
 
 	initPlayerStates();
-	if(!scenarioOps->map) //we own map and need to initialize it
+	if(!remoteMap) //we own map and need to initialize it
 	{
 		placeCampaignHeroes();
 		initGrailPosition();

@@ -525,8 +525,6 @@ void CServerHandler::startGameplay()
 	if(CMM)
 		CMM->disable();
 	
-	if(client)
-		delete client;
 	client = new CClient();
 
 	switch(si->mode)
