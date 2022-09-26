@@ -222,6 +222,9 @@ void CVCMIServer::threadAnnounceLobby()
 
 bool CVCMIServer::prepareToStartGame()
 {
+	for(auto c : connections)
+		c->enterLobbyConnectionMode();
+	
 	if(state == EServerState::GAMEPLAY)
 	{
 		restartGameplay = true;

@@ -514,6 +514,7 @@ void CServerHandler::sendStartGame(bool allowOnlyAI) const
 		lsg.initializedStartInfo->map = nullptr; //delete?
 		* si = * lsg.initializedStartInfo;
 	}
+	serverConnection->enterLobbyConnectionMode();
 	sendLobbyPack(lsg);
 }
 
