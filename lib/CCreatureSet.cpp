@@ -80,14 +80,10 @@ SlotID CCreatureSet::getSlotFor(CreatureID creature, ui32 slotsAmount) const /*r
 
 SlotID CCreatureSet::getSlotFor(const CCreature *c, ui32 slotsAmount) const
 {
-	assert(c);
-	c = VLC->creh->objects[c->idNumber];
-	
+	assert(c && c->valid());
 	for(auto & elem : stacks)
 	{
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
-		
+		assert(elem.second->type->valid());
 		if(elem.second->type == c)
 		{
 			return elem.first; //if there is already such creature we return its slot id
@@ -98,9 +94,7 @@ SlotID CCreatureSet::getSlotFor(const CCreature *c, ui32 slotsAmount) const
 
 bool CCreatureSet::hasCreatureSlots(const CCreature * c, SlotID exclude) const
 {
-	assert(c);
-	c = VLC->creh->objects[c->idNumber];
-	
+	assert(c && c->valid());
 	for(auto & elem : stacks) // elem is const
 	{
 		if(elem.first == exclude) // Check slot
@@ -109,8 +103,7 @@ bool CCreatureSet::hasCreatureSlots(const CCreature * c, SlotID exclude) const
 		if(!elem.second || !elem.second->type) // Check creature
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
+		assert(elem.second->type->valid());
 
 		if(elem.second->type == c)
 			return true;
@@ -120,9 +113,7 @@ bool CCreatureSet::hasCreatureSlots(const CCreature * c, SlotID exclude) const
 
 std::vector<SlotID> CCreatureSet::getCreatureSlots(const CCreature * c, SlotID exclude, TQuantity ignoreAmount) const
 {
-	assert(c);
-	c = VLC->creh->objects[c->idNumber];
-	
+	assert(c && c->valid());
 	std::vector<SlotID> result;
 
 	for(auto & elem : stacks)
@@ -136,9 +127,7 @@ std::vector<SlotID> CCreatureSet::getCreatureSlots(const CCreature * c, SlotID e
 		if(elem.second->count == ignoreAmount || elem.second->count < 1)
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
-		
+		assert(elem.second->type->valid());
 		result.push_back(elem.first);
 	}
 	return result;
@@ -146,9 +135,7 @@ std::vector<SlotID> CCreatureSet::getCreatureSlots(const CCreature * c, SlotID e
 
 bool CCreatureSet::isCreatureBalanced(const CCreature * c, TQuantity ignoreAmount) const
 {
-	assert(c);
-	c = VLC->creh->objects[c->idNumber];
-	
+	assert(c && c->valid());
 	TQuantity max = 0;
 	TQuantity min = std::numeric_limits<TQuantity>::max();
 
@@ -162,8 +149,7 @@ bool CCreatureSet::isCreatureBalanced(const CCreature * c, TQuantity ignoreAmoun
 		if(count == ignoreAmount || count < 1)
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
+		assert(elem.second->type->valid());
 
 		if(count > max)
 			max = count;
