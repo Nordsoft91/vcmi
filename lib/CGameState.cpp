@@ -758,7 +758,7 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	logGlobal->debug("Initialization:");
 
 	initPlayerStates();
-	if(!scenarioOps->map)
+	if(!scenarioOps->map) //we own map and need to initialize it
 	{
 		placeCampaignHeroes();
 		initGrailPosition();
@@ -766,38 +766,24 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 		randomizeMapObjects();
 		placeStartingHeroes();
 		initStartingResources();
-	}
-	
-	initHeroes(scenarioOps->map);
-	
-	if(!scenarioOps->map)
-	{
+		initHeroes(false);
 		initStartingBonus();
 		initTowns();
 		initMapObjects();
 		buildBonusSystemTree();
 		initVisitingAndGarrisonedHeroes();
+		logGlobal->debug("\tChecking objectives");
+		map->checkForObjectives(); //needs to be run when all objects are properly placed
+		scenarioOps->map = map;
 	}
-	else
+	else //map received from server, need just properly initialize state
 	{
+		initHeroes(true);
 		for(auto & elem : map->towns)
 			if(elem->getOwner() != PlayerColor::NEUTRAL)
 				getPlayerState(elem->getOwner())->towns.push_back(elem);
 		
-		//buildBonusSystemTree();
 		deserializationFix();
-		//buildGlobalTeamPlayerTree();
-	}
-	
-	if(!scenarioOps->map)
-	{
-		logGlobal->debug("\tChecking objectives");
-		map->checkForObjectives(); //needs to be run when all objects are properly placed
-		if(1)
-			scenarioOps->map = map;
-	}
-	else
-	{
 		updateOnLoad(scenarioOps);
 	}
 	
