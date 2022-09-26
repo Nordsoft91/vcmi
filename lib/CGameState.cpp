@@ -765,14 +765,14 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 		initRandomFactionsForPlayers();
 		randomizeMapObjects();
 		placeStartingHeroes();
+		initStartingResources();
 	}
 	
-	initStartingResources();
 	initHeroes(scenarioOps->map);
-	initStartingBonus();
 	
 	if(!scenarioOps->map)
 	{
+		initStartingBonus();
 		initTowns();
 		initMapObjects();
 		buildBonusSystemTree();
@@ -780,14 +780,20 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	}
 	else
 	{
-		buildGlobalTeamPlayerTree();
+		for(auto & elem : map->towns)
+			if(elem->getOwner() != PlayerColor::NEUTRAL)
+				getPlayerState(elem->getOwner())->towns.push_back(elem);
+		
+		//buildBonusSystemTree();
+		deserializationFix();
+		//buildGlobalTeamPlayerTree();
 	}
 	
 	if(!scenarioOps->map)
 	{
 		logGlobal->debug("\tChecking objectives");
 		map->checkForObjectives(); //needs to be run when all objects are properly placed
-		if(0)
+		if(1)
 			scenarioOps->map = map;
 	}
 	else
@@ -1517,7 +1523,7 @@ void CGameState::initHeroes(bool readOnly)
 		}
 		else
 		{
-			auto vhi = new CGHeroInstance();
+			vhi = new CGHeroInstance();
 			vhi->initHero(getRandomGenerator(), htype);
 			map->allHeroes[typeID] = vhi;
 		}
