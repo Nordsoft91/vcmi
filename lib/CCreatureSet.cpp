@@ -85,9 +85,7 @@ SlotID CCreatureSet::getSlotFor(const CCreature *c, ui32 slotsAmount) const
 	
 	for(auto & elem : stacks)
 	{
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
-		
+		assert(elem.second->type->valid());
 		if(elem.second->type == c)
 		{
 			return elem.first; //if there is already such creature we return its slot id
@@ -109,8 +107,7 @@ bool CCreatureSet::hasCreatureSlots(const CCreature * c, SlotID exclude) const
 		if(!elem.second || !elem.second->type) // Check creature
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
+		assert(elem.second->type->valid());
 
 		if(elem.second->type == c)
 			return true;
@@ -136,9 +133,7 @@ std::vector<SlotID> CCreatureSet::getCreatureSlots(const CCreature * c, SlotID e
 		if(elem.second->count == ignoreAmount || elem.second->count < 1)
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
-		
+		assert(elem.second->type->valid());
 		result.push_back(elem.first);
 	}
 	return result;
@@ -162,8 +157,7 @@ bool CCreatureSet::isCreatureBalanced(const CCreature * c, TQuantity ignoreAmoun
 		if(count == ignoreAmount || count < 1)
 			continue;
 
-		if(!elem.second->type->valid())
-			elem.second->type = VLC->creh->objects[elem.second->type->idNumber];
+		assert(elem.second->type->valid());
 
 		if(count > max)
 			max = count;
