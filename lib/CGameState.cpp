@@ -780,7 +780,7 @@ void CGameState::init(const IMapService * mapService, StartInfo * si, bool allow
 	else //map received from server, need just properly initialize state
 	{
 		initHeroes(true);
-		for(auto & elem : map->towns)
+		for(auto elem : map->towns)
 			if(elem->getOwner() != PlayerColor::NEUTRAL)
 				getPlayerState(elem->getOwner())->towns.push_back(elem);
 		
