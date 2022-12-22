@@ -154,9 +154,6 @@ jobs:
 
     - name: Build Number
       id: build_number
-      if: "${{ github.ref == 'refs/heads/master' }}"
-      env:
-        cmake_version_arg: -D ENABLE_GITVERSION=OFF 
       run: |
         source '${{github.workspace}}/CI/get_package_name.sh'
         if [ '${{ matrix.artifact_platform }}' ]; then
@@ -166,6 +163,8 @@ jobs:
         echo VCMI_PACKAGE_NAME_SUFFIX="$VCMI_PACKAGE_NAME_SUFFIX" >> $GITHUB_ENV
       env:
         PULL_REQUEST: ${{ github.event.pull_request.number }}
+        if: "${{ github.ref == 'refs/heads/master' }}"
+        cmake_version_arg: -D ENABLE_GITVERSION=OFF 
 
     - name: Configure CMake
           
