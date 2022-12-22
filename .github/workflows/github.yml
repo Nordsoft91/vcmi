@@ -150,12 +150,7 @@ jobs:
 
     - name: Git branch name
       id: git-branch-name
-      uses: EthanSK/git-branch-name-action@v1
-
-    - name: Release version
-      if: "${{ github.ref == 'refs/heads/master' }}"
-      env:
-        cmake_release_arg: -DENABLE_GITVERSION=0 
+      uses: EthanSK/git-branch-name-action@v1        
 
     - name: Build Number
       run: |
@@ -166,6 +161,7 @@ jobs:
         echo VCMI_PACKAGE_FILE_NAME="$VCMI_PACKAGE_FILE_NAME" >> $GITHUB_ENV
         echo VCMI_PACKAGE_NAME_SUFFIX="$VCMI_PACKAGE_NAME_SUFFIX" >> $GITHUB_ENV
       env:
+        cmake_release_arg: -DENABLE_GITVERSION=${{ github.ref == 'refs/heads/master' }}
         PULL_REQUEST: ${{ github.event.pull_request.number }}
 
     - name: Configure CMake
