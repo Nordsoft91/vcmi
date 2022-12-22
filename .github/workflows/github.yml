@@ -155,6 +155,7 @@ jobs:
     - name: Build Number
       id: build_number
       if: "${{ github.ref == 'refs/heads/master' }}"
+      env:
         cmake_version_arg: -D ENABLE_GITVERSION=OFF 
       run: |
         source '${{github.workspace}}/CI/get_package_name.sh'
@@ -178,7 +179,7 @@ jobs:
             -DENABLE_TEST=${{matrix.test}} \
             -DPACKAGE_NAME_SUFFIX:STRING="$VCMI_PACKAGE_NAME_SUFFIX" \
             -DPACKAGE_FILE_NAME:STRING="$VCMI_PACKAGE_FILE_NAME" \
-            ${{steps.build_number.cmake_version_arg}}
+            ${{env.cmake_version_arg}}
       env:
         CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
