@@ -31,7 +31,7 @@ VCMI_PACKAGE_GITVERSION="ON"
 if [ -z "$TMP_PRID" ] || [ "$TMP_PRID" == "false" ];
 then
 	branch_name=$(echo "$TMP_BRANCH" | sed 's/[^[:alnum:]]\+/_/g')
-	echo
+	echo branch_name
 	VCMI_PACKAGE_FILE_NAME="${VCMI_PACKAGE_FILE_NAME}-branch-${branch_name}-${TMP_COMMIT}"
 	VCMI_PACKAGE_NAME_SUFFIX="branch ${branch_name}"
 	if [ "${branch_name}" != "(master)" ];
