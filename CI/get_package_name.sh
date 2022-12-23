@@ -32,11 +32,23 @@ then
 	branch_name=$(echo "$TMP_BRANCH" | sed 's/[^[:alnum:]]\+/_/g')
 	VCMI_PACKAGE_FILE_NAME="${VCMI_PACKAGE_FILE_NAME}-branch-${branch_name}-${TMP_COMMIT}"
 	VCMI_PACKAGE_NAME_SUFFIX="branch ${branch_name}"
+	if [ "${branch_name}" != "master" ];
+	then
+		VCMI_PACKAGE_NAME_SUFFIX="branch ${branch_name}"
+	fi
 else
 	VCMI_PACKAGE_FILE_NAME="${VCMI_PACKAGE_FILE_NAME}-PR-${TMP_PRID}-${TMP_COMMIT}"
 	VCMI_PACKAGE_NAME_SUFFIX="PR ${TMP_PRID}"
 fi
 VCMI_PACKAGE_NAME_SUFFIX="(${VCMI_PACKAGE_NAME_SUFFIX})"
 
+if [ "${branch_name}" != "master" ];
+then
+	VCMI_PACKAGE_GITVERSION="ON"
+else
+	VCMI_PACKAGE_GITVERSION="OFF"
+fi
+
 export VCMI_PACKAGE_FILE_NAME
 export VCMI_PACKAGE_NAME_SUFFIX
+export VCMI_PACKAGE_GITVERSION
