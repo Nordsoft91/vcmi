@@ -64,7 +64,7 @@ jobs:
 
   build:
     needs: check_last_build
-    if: (success() || failure()) && needs.check_last_build.skip_build != 1
+    if: (success() || failure() || cancelled()) && needs.check_last_build.skip_build != 1
     strategy:
       matrix:
         include:
