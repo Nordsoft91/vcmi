@@ -64,7 +64,7 @@ jobs:
 
   build:
     needs: check_last_build
-    if: always() && needs.check_last_build.skip_build != 1
+    if: (success() || failure()) && needs.check_last_build.skip_build != 1
     strategy:
       matrix:
         include:
@@ -241,7 +241,7 @@ jobs:
         channel: '#notifications'
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
+      if: success() || failure() || cancelled()
 
     - name: Trigger Android
       uses: peter-evans/repository-dispatch@v1
