@@ -69,7 +69,15 @@ void startGame(const QStringList & args)
 void startEditor(const QStringList & args)
 {
 #ifdef ENABLE_EDITOR
+#ifdef Q_OS_IOS
+	static const char clientName[] = "vcmieditor";
+	argcForClient = 1;
+	argvForClient = new char*[argcForClient];
+	argvForClient[0] = new char[strlen(clientName)+1];
+	qApp->quit();
+#else
 	startExecutable(pathToQString(VCMIDirs::get().mapEditorPath()), args);
+#endif
 #endif
 }
 
