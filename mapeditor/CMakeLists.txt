@@ -190,7 +190,7 @@ else()
 endif()
 
 # copy whole directory
-install(DIRECTORY icons DESTINATION RESOURCES_DESTINATION)
+install(DIRECTORY icons DESTINATION ${RESOURCES_DESTINATION})
 if(ENABLE_TRANSLATIONS)
 	install(FILES ${editor_QM} DESTINATION ${RESOURCES_DESTINATION}/translation)
 endif()
