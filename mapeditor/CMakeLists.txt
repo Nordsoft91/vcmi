@@ -130,7 +130,11 @@ if(WIN32)
 	set(editor_ICON mapeditor.rc)
 endif()
 
-add_executable(vcmieditor WIN32 ${editor_QM} ${editor_SRCS} ${editor_HEADERS} ${editor_UI_HEADERS} ${editor_ICON})
+if(ENABLE_SINGLE_APP_BUILD)
+	add_library(vcmieditor STATIC ${editor_QM} ${editor_SRCS} ${editor_HEADERS} ${editor_UI_HEADERS})
+else()
+	add_executable(vcmieditor WIN32 ${editor_QM} ${editor_SRCS} ${editor_HEADERS} ${editor_UI_HEADERS} ${editor_ICON})
+endif()
 
 if(TARGET Qt6::Core)
 	if(ENABLE_TRANSLATIONS)
@@ -178,10 +182,19 @@ add_custom_command(TARGET vcmieditor POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/translation ${CMAKE_BINARY_DIR}/bin/${CMAKE_CFG_INTDIR}/mapeditor/translation
 )
 
-install(TARGETS vcmieditor DESTINATION ${BIN_DIR})
+if(APPLE_IOS)
+	set(RESOURCES_DESTINATION ${DATA_DIR})
+else()
+	set(RESOURCES_DESTINATION ${DATA_DIR}/mapeditor)
+	install(TARGETS vcmieditor DESTINATION ${BIN_DIR})
+endif()
+
 # copy whole directory
-install(DIRECTORY icons DESTINATION ${DATA_DIR}/mapeditor)
-install(FILES ${editor_QM} DESTINATION ${DATA_DIR}/mapeditor/translation)
+install(DIRECTORY icons DESTINATION RESOURCES_DESTINATION)
+if(ENABLE_TRANSLATIONS)
+	install(FILES ${editor_QM} DESTINATION ${RESOURCES_DESTINATION}/translation)
+endif()
+
 # Install icons and desktop file on Linux
 if(NOT WIN32 AND NOT APPLE)
 	install(FILES "vcmieditor.desktop" DESTINATION share/applications)
