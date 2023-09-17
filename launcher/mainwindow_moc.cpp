@@ -59,16 +59,32 @@ void MainWindow::computeSidePanelSizes()
 		ui->startGameButton
 	};
 
-	for(auto & widget : widgets)
+	int totalHeight = 0;
+	auto setButtonMinMaxSize = [&totalHeight](QToolButton * widget)
 	{
 		QFontMetrics metrics(widget->font());
 		QSize iconSize = widget->iconSize();
 
 		// this is minimal space that is needed for our button to avoid text clipping
 		int buttonHeight = iconSize.height() + metrics.height() + 4;
+		totalHeight += buttonHeight;
 
 		widget->setMinimumHeight(buttonHeight);
 		widget->setMaximumHeight(buttonHeight * 1.2);
+	};
+
+	for(auto * widget : widgets)
+	{
+		setButtonMinMaxSize(widget);
+	}
+
+	if(totalHeight > size().height())
+	{
+		for(auto & widget : widgets)
+		{
+			widget->setIconSize(widget->iconSize() / 2);
+			setButtonMinMaxSize(widget);
+		}
 	}
 }
 
